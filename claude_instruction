@@ -1,0 +1,287 @@
+# Pharaohound — Project Context & AI Developer Instruction File
+
+This file is the single source of truth for any AI assistant editing the **Pharaohound** codebase. Read it in full before making changes. It provides architectural diagrams, code execution paths, and specific Python skeletons for implementing advanced tactical Red Team capabilities.
+
+---
+
+## 🏛 What is Pharaohound?
+
+Pharaohound is a **command-line security tool** written in Python 3 that:
+1. **Ingests** BloodHound JSON exports (users, computers, groups, GPOs, OUs, domains, containers, and PKI/AD CS certificates).
+2. **Analyzes** them using a modular vulnerability-detection registry (18+ checks).
+3. **Builds** multi-step attack path chains (e.g., Kerberoast → ACL → RBCD → Domain Admin).
+4. **Scores & Prioritizes** remediation/exploitation options based on OpSec noise.
+5. **Reports** results in interactive terminal console, plain-text files, and self-contained interactive Vis.js HTML graphs.
+
+**Author:** Asbawy
+**License:** MIT
+**Version:** 1.0.0 (Ready for Publish)
+
+---
+
+## 📁 Directory Structure & Code Layout
+
+```text
+FullProject/
+├── pharaohound/                     # Core Python package
+│   ├── __init__.py                  # Package metadata (__version__, __author__)
+│   ├── __main__.py                  # `python -m pharaohound` entrypoint
+│   ├── cli.py                       # CLI argument parser + orchestrator
+│   ├── attack_paths.py              # Builds multi-step attack chains from findings
+│   ├── reachability.py              # Compromised-user reachability filtering
+│   ├── graph.py                     # Transitive graph-path helpers
+│   ├── intelligence.py              # Remediation intelligence database (exploit/defend mappings)
+│   ├── models.py                    # AD entity models (User, Computer, Group, GPO, OU, Domain, Container)
+│   ├── noob.py                      # "Pentest Noob" mode simplification rules
+│   ├── parsers.py                   # Threaded ijson/chunked JSON parser
+│   ├── recommendations.py           # Priority-sorted remediation engine (OpSec score sorting)
+│   ├── tactical.py                  # Playbook variable interpolation engine
+│   ├── theme.py                     # ANSI color palette, severity glyphs, ASCII banner
+│   │
+│   ├── analyzers/                   # Modular vulnerability analyzers (auto-discovered)
+│   │   ├── __init__.py              # Imports all analyzer modules for auto-discovery
+│   │   ├── base.py                  # BaseAnalyzer ABC + Finding dataclass
+│   │   ├── registry.py              # Registry discovering BaseAnalyzer.__subclasses__()
+│   │   ├── acl_abuse.py             # ACL permissions (GenericAll, WriteDacl, etc.)
+│   │   ├── adcs.py                  # AD CS misconfigurations (ESC1 to ESC13)
+│   │   ├── delegation.py            # Delegation paths (Constrained/Unconstrained/RBCD)
+│   │   ├── gmsa.py                  # gMSA Password Reader analyzer
+│   │   ├── maq.py                   # Machine Account Quota analyzer
+│   │   └── ... (more analyzers)     # Sessions, trusts, stale accounts, etc.
+│   │
+│   └── reporters/                   # Output formatters
+│       ├── __init__.py              # Exports Console, Text, and HTML reporters
+│       ├── console.py               # Rich/ASCII terminal tables and GLOSSARY
+│       ├── text.py                  # Plain-text .txt report with GLOSSARY
+│       └── html.py                  # Interactive Vis.js network graph
+│
+├── pharaohound.py                   # Root execution script wrapper
+├── pyproject.toml                   # PEP 517 build config, CLI entrypoint
+├── requirements.txt                 # Dependencies (ijson, rich)
+├── README.md                        # User documentation
+├── TO_DO.md                         # Enhancements & tactical roadmap
+└── claude_instruction               # THIS FILE
+```
+
+---
+
+## ⚙️ Architecture Flow & Invocation Pipeline
+
+```mermaid
+graph TD
+    A[cli.py: parse_args] --> B[parsers.py: load_directory]
+    B --> C[cli.py: Interactive User Selection]
+    C --> D[analyzers/registry.py: run all BaseAnalyzer subclasses]
+    D --> E[attack_paths.py: Build attack paths]
+    E --> F[recommendations.py: Prioritize and score paths]
+    F --> G[reachability.py: Filter paths user can reach]
+    G --> H[reporters: Console / Text / HTML output]
+```
+
+---
+
+## 🧠 How to Implement Advanced Red Team Features
+
+### 1. Active Directory Certificate Services (AD CS) Analyzer
+To implement AD CS template and CA checks (ESC1 to ESC13), you must parse certificate authority and template structures. In BloodHound formats, certificate templates are represented as ADObjects of type `certtemplate` and CAs are represented as `ca`.
+
+#### 📝 Implementation Blueprint (`pharaohound/analyzers/adcs.py`)
+```python
+#!/usr/bin/env python3
+"""AD CS Misconfigurations Analyzer."""
+
+from __future__ import annotations
+from typing import Optional, List, Dict, Any
+
+from ..models import ObjectStore, ADObject
+from ..theme import Severity
+from .base import BaseAnalyzer, Finding
+
+class ADCSAnalyzer(BaseAnalyzer):
+    name = "AD CS Misconfigurations"
+    description = "Detects ESC1–ESC13 certificate abuse paths in Active Directory Certificate Services"
+
+    def analyze(self, store: ObjectStore) -> Optional[Finding]:
+        templates = list(store.certtemplates.values())
+        cas = list(store.cas.values())
+
+        if not templates and not cas:
+            return None
+
+        items = []
+
+        # Example: ESC1 detection
+        for tpl in templates:
+            ekus = tpl.extras.get("ekus", [])
+            has_client_auth = (
+                tpl.extras.get("client_auth")
+                or any("1.3.6.1.5.5.7.3.2" in e for e in ekus)
+                or any("1.3.6.1.5.2.3.4" in e for e in ekus)
+            )
+            if has_client_auth and tpl.extras.get("enrollee_supplies_subject"):
+                if not tpl.extras.get("requires_manager_approval"):
+                    items.append({
+                        "esc": "ESC1",
+                        "template": tpl.name,
+                        "severity": Severity.CRITICAL,
+                        "description": f"Template '{tpl.name}' allows Client Auth and enrollee supplies SAN.",
+                        "playbook": f"certipy req -u '<USER>' -p '<PASS>' -ca '<CA>' -template '{tpl.name}' -upn administrator@<DOMAIN>"
+                    })
+
+        # Example: ESC11 (RPC encryption disabled)
+        for ca in cas:
+            enc_req = ca.properties.get("enforceencryptionforrequests")
+            if enc_req is not None and not enc_req:
+                items.append({
+                    "esc": "ESC11",
+                    "ca": ca.name,
+                    "severity": Severity.HIGH,
+                    "description": f"CA '{ca.name}' does not enforce RPC encryption.",
+                    "playbook": f"certipy relay -target rpc://<CA_HOST> -ca '{ca.name}' -template DomainController"
+                })
+
+        if not items:
+            return None
+
+        # Return Finding ...
+```
+
+---
+
+### 2. OpSec-Aware Path Prioritization Engine
+Paths should be ranked dynamically based on the noise (audit footprint) generated by their exploitation. High-noise steps (like password resets) receive high penalties, while low-noise steps (like reading LAPS passwords) receive no penalty.
+
+#### 📝 Implementation Blueprint (`pharaohound/recommendations.py`)
+```python
+# Add this scoring matrix and sorting function to recommendations.py
+
+OPSEC_PENALTIES = {
+    "ForceChangePassword": 10,
+    "Self-Add to Group Escalation": 8,
+    "Dangerous ACL Permissions": 8,
+    "GPO Abuse Paths": 8,
+    "Shadow Credentials Opportunities": 5,
+    "Dangerous Delegation Paths": 5,
+    "Kerberoastable Users": 2,
+    "AS-REP Roastable Users": 0,
+    "LAPS Password Readers": 0,
+}
+
+def get_opsec_score(path_edges: list[str]) -> float:
+    """
+    Calculate an OpSec score out of 100 for a given attack path.
+    100 represents a completely silent path.
+    """
+    score = 100.0
+    # Deduct 5 points per hop (length penalty)
+    score -= len(path_edges) * 5
+    
+    # Deduct penalties for audit footprint
+    for edge in path_edges:
+        penalty = OPSEC_PENALTIES.get(edge, 1.0)
+        score -= penalty
+        
+    return max(0.0, score)
+
+def sort_paths_by_stealth(paths: list[dict]) -> list[dict]:
+    """
+    Sort paths using: Score = 100 - (length * 5) - penalties.
+    Paths are returned with the stealthiest path first.
+    """
+    for p in paths:
+        edges = p.get("edges", [])
+        p["opsec_score"] = get_opsec_score(edges)
+    
+    return sorted(paths, key=lambda x: x.get("opsec_score", 0.0), reverse=True)
+```
+
+---
+
+### 3. Dynamic Command Interpolation (Variables Customizer)
+To prevent operators from having to manually fill in command targets, we parse a user-supplied JSON config file containing target variables and replace placeholders (e.g., `<DC_IP>`) dynamically.
+
+#### 📝 Implementation Blueprint (`pharaohound/tactical.py`)
+```python
+#!/usr/bin/env python3
+"""Variable Interpolation Engine."""
+
+import json
+import re
+from typing import Dict, List, Any, Optional
+
+class PlaybookInterpolator:
+    def __init__(self, variables_path: Optional[str] = None) -> None:
+        self._raw_vars: Dict[str, str] = {}
+        self._resolved: Dict[str, str] = {}
+        if variables_path:
+            self.load(variables_path)
+
+    def load(self, path: str) -> None:
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                self._raw_vars = json.load(f)
+        except Exception as e:
+            print(f"  [!] Failed to load variables file '{path}': {e}")
+            return
+
+        for key, val in self._raw_vars.items():
+            self._resolved[key.upper()] = str(val)
+
+    def interpolate(self, text: str) -> str:
+        if not self._resolved or not text:
+            return text
+        pattern = re.compile(r"<([A-Z0-9_]+)>")
+        def replacer(match: re.Match) -> str:
+            key = match.group(1)
+            return self._resolved.get(key, match.group(0))
+        return pattern.sub(replacer, text)
+
+    def interpolate_findings(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        for f in findings:
+            if f.get("playbooks"):
+                f["playbooks"] = [self.interpolate(cmd) for cmd in f["playbooks"]]
+            if f.get("recommendation"):
+                f["recommendation"] = self.interpolate(f["recommendation"])
+        return findings
+```
+
+---
+
+### 4. "Pentest Noob" Mode (`--noob`)
+Noob mode translates AD terminology into simple steps and limits output to the shortest direct takeover paths.
+
+#### 📝 Implementation Blueprint (`pharaohound/noob.py`)
+```python
+# Simplify functions filter findings, paths, and recommendations
+def simplify_findings(findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    simplified = []
+    for f in findings:
+        if f.get("severity") not in ("CRITICAL", "HIGH"):
+            continue
+        # translate jargon, cap data list to 3 items, keep only single best playbook
+        simplified.append(f)
+    return simplified
+```
+
+---
+
+## 🚫 Rules for Editing
+
+1. **No JSON reporter** — Do not re-add the removed JSON reporter.
+2. **Branding** — Ensure only the "Pharaohound" brand is referenced in user-facing text.
+3. **Registry Pattern** — Keep all new analyzers subclassed from `BaseAnalyzer` inside `pharaohound/analyzers/` so they are auto-discovered.
+4. **OpSec Focus** — Any new analyzer or attack edge MUST have a designated penalty in `OPSEC_PENALTIES` within `recommendations.py`.
+5. **No Placeholders** — In all code modifications, verify execution syntax against real BloodHound datasets (located in `testCase/`).
+6. **Preserve comments** — Maintain existing code docstrings and developer explanations.
+
+---
+
+## 🔧 Developer CLI Guide
+
+```bash
+# Execute against a target folder using variable mapping and stealth optimization
+python pharaohound.py testCase --user Administrator@CORP.LOCAL --variables vars.json
+
+# Run in Pentest Noob mode for simple summaries
+python pharaohound.py testCase --noob --format console-only
+```
