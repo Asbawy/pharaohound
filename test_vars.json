@@ -1,7 +1,0 @@
-{
-  "domain_controller": "10.10.10.10",
-  "dc_hostname": "DC01.NANOCORP.HTB",
-  "compromised_password": "Password123!",
-  "target_user": "Administrator",
-  "controlled_computer": "EVIL-WORKSTATION$"
-}
