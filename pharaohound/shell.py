@@ -139,7 +139,8 @@ class PharaohoundShell:
             print(f"  {colorize('[!]', Colors.OCHRE)} No objects found" +
                   (f" of type '{type_filter}'" if type_filter else "") + ".")
             return
-        print(f"\n  {colorize(f'Objects ({len(objects)}):', Colors.GOLD)}")
+        obj_title = f"Objects ({len(objects)}):"
+        print(f"\n  {colorize(obj_title, Colors.GOLD)}")
         for i, obj in enumerate(sorted(objects, key=lambda o: o.name)[:50], 1):
             type_label = colorize(f"[{obj.object_type}]", Colors.DIM)
             flags = []
@@ -152,7 +153,8 @@ class PharaohoundShell:
             flag_str = f" ({', '.join(flags)})" if flags else ""
             print(f"    {i:>3}. {type_label} {obj.name}{flag_str}")
         if len(objects) > 50:
-            print(f"    {colorize(f'  ... and {len(objects) - 50} more', Colors.DIM)}")
+            more_msg = f"  ... and {len(objects) - 50} more"
+            print(f"    {colorize(more_msg, Colors.DIM)}")
         print()
 
     def _cmd_find(self, query: str) -> None:
@@ -164,11 +166,13 @@ class PharaohoundShell:
         if not matches:
             print(f"  {colorize('[!]', Colors.OCHRE)} No objects matching '{query}'.")
             return
-        print(f"\n  {colorize(f'Search results for \"{query}\" ({len(matches)} matches):', Colors.GOLD)}")
+        search_title = f'Search results for "{query}" ({len(matches)} matches):'
+        print(f"\n  {colorize(search_title, Colors.GOLD)}")
         for obj in matches[:20]:
             print(f"    {colorize(f'[{obj.object_type}]', Colors.DIM)} {obj.name} (SID: {obj.sid[:20]}...)")
         if len(matches) > 20:
-            print(f"    {colorize(f'  ... and {len(matches) - 20} more', Colors.DIM)}")
+            more_msg = f"  ... and {len(matches) - 20} more"
+            print(f"    {colorize(more_msg, Colors.DIM)}")
         print()
 
     def _cmd_info(self, query: str) -> None:
@@ -217,7 +221,8 @@ class PharaohoundShell:
             rights = [a.get("RightName", "") for a in obj.aces if isinstance(a, dict) and a.get("RightName")]
             unique_rights = sorted(set(rights))
             if unique_rights:
-                print(f"  {colorize(f'ACEs ({len(obj.aces)} total, {len(unique_rights)} unique rights):', Colors.GOLD)}")
+                aces_title = f"ACEs ({len(obj.aces)} total, {len(unique_rights)} unique rights):"
+                print(f"  {colorize(aces_title, Colors.GOLD)}")
                 for r in unique_rights[:10]:
                     print(f"    → {r}")
 
@@ -227,7 +232,8 @@ class PharaohoundShell:
         if not self.attack_paths:
             print(f"  {colorize('[✓]', Colors.MALACHITE)} No attack paths detected.")
             return
-        print(f"\n  {colorize(f'Attack Paths ({len(self.attack_paths)}):', Colors.GOLD)}")
+        paths_title = f"Attack Paths ({len(self.attack_paths)}):"
+        print(f"\n  {colorize(paths_title, Colors.GOLD)}")
         for i, p in enumerate(self.attack_paths, 1):
             opsec = p.get("opsec_label", "")
             sev = p.get("severity", "")
@@ -266,14 +272,16 @@ class PharaohoundShell:
         if not self.recommendations:
             print(f"  {colorize('[✓]', Colors.MALACHITE)} No recommendations — domain looks healthy.")
             return
-        print(f"\n  {colorize(f'Recommendations ({len(self.recommendations)}):', Colors.GOLD)}")
+        recs_title = f"Recommendations ({len(self.recommendations)}):"
+        print(f"\n  {colorize(recs_title, Colors.GOLD)}")
         for r in self.recommendations:
             sev_colors = {"CRITICAL": Colors.CARNELIAN, "HIGH": Colors.OCHRE, "MEDIUM": Colors.GOLD}
             col = sev_colors.get(r["severity"], Colors.DIM)
             opsec = r.get("opsec_label", "")
             priority = r.get("priority", 3)
             title = r.get("title", "")
-            print(f"  {colorize(f'[P{priority}]', col)} {colorize(title, col)}  {opsec}")
+            priority_label = f"[P{priority}]"
+            print(f"  {colorize(priority_label, col)} {colorize(title, col)}  {opsec}")
             print(f"    {colorize('Action:', Colors.DIM)} {r.get('action', '')}")
             print(f"    {colorize('$', Colors.SAND)} {r.get('command', '')}")
             if r.get("alt_commands"):
@@ -308,7 +316,8 @@ class PharaohoundShell:
         if intel.get("playbooks"):
             print(f"\n  {colorize('Exploitation Commands:', Colors.TURQUOISE)}")
             for target_type, cmds in intel["playbooks"].items():
-                print(f"    {colorize(f'[{target_type}]:', Colors.OCHRE)}")
+                target_label = f"[{target_type}]:"
+                print(f"    {colorize(target_label, Colors.OCHRE)}")
                 for cmd in cmds:
                     print(f"      {colorize('$', Colors.SAND)} {cmd}")
         if intel.get("remediation"):
@@ -316,7 +325,8 @@ class PharaohoundShell:
         print(f"  {colorize('═' * 60, Colors.GOLD)}\n")
 
     def _cmd_edges(self) -> None:
-        print(f"\n  {colorize(f'Known Edge/Right Types ({len(EDGE_INTELLIGENCE)}):', Colors.GOLD)}")
+        edges_title = f"Known Edge/Right Types ({len(EDGE_INTELLIGENCE)}):"
+        print(f"\n  {colorize(edges_title, Colors.GOLD)}")
         for key, val in sorted(EDGE_INTELLIGENCE.items()):
             sev = val.get("severity", "INFO")
             sev_colors = {"CRITICAL": Colors.CARNELIAN, "HIGH": Colors.OCHRE, "MEDIUM": Colors.GOLD, "LOW": Colors.TURQUOISE}

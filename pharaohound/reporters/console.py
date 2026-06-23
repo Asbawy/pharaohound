@@ -220,11 +220,14 @@ class ConsoleReporter:
                 self._print(f"    {colorize('$', Colors.SAND)} {cmd}")
 
         if f.get("data"):
-            self._print(f"\n  {colorize(f'Details ({len(f["data"])} items):', Colors.DIM)}")
+            details_title = f"Details ({len(f['data'])} items):"
+            self._print(f"\n  {colorize(details_title, Colors.DIM)}")
             for i, item in enumerate(f["data"][:8], 1):
                 self._print(f"    {i}. {self._format_item(item)}")
             if len(f["data"]) > 8:
-                self._print(f"    {colorize(f'… and {len(f["data"]) - 8} more (see HTML report for full list)', Colors.DIM)}")
+                more_count = len(f["data"]) - 8
+                more_msg = f"… and {more_count} more (see HTML report for full list)"
+                self._print(f"    {colorize(more_msg, Colors.DIM)}")
         self._print("")
 
     def _format_item(self, item: Dict[str, Any]) -> str:
@@ -333,7 +336,8 @@ class ConsoleReporter:
             col = severity_color(p["severity"])
             glyph = severity_glyph(p["severity"])
             opsec = p.get("opsec_label", "")
-            self._print(f"{colorize(glyph, col)} {colorize(f'Path {i}: {p["name"]}', col, bold=True)}  {opsec}")
+            path_title = f"Path {i}: {p['name']}"
+            self._print(f"{colorize(glyph, col)} {colorize(path_title, col, bold=True)}  {opsec}")
             self._print(f"  {colorize('Summary:', Colors.DIM)} {p['summary']}")
             if p.get("prerequisites"):
                 self._print(f"  {colorize('Prerequisites:', Colors.DIM)} {', '.join(p['prerequisites'])}")
@@ -361,7 +365,8 @@ class ConsoleReporter:
         for r in recs:
             col = severity_color(r["severity"])
             opsec = r.get("opsec_label", "")
-            self._print(f"{colorize(f'[P{r["priority"]}]', col, bold=True)} {colorize(r['title'], col, bold=True)}  {opsec}")
+            priority_str = f"[P{r['priority']}]"
+            self._print(f"{colorize(priority_str, col, bold=True)} {colorize(r['title'], col, bold=True)}  {opsec}")
             self._print(f"  {colorize('Action:', Colors.DIM)} {r['action']}")
             self._print(f"  {colorize('Command:', Colors.TURQUOISE)} {r['command']}")
             for alt in r.get("alt_commands", []):
