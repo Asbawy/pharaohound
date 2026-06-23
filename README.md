@@ -2,7 +2,6 @@
 > **The Fast-Triage, Command-Generating Active Directory Analysis Engine**
 
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Category: Active Directory](https://img.shields.io/badge/Focus-Active%20Directory%20%26%20Azure-teal.svg)](https://github.com/)
 
 **Pharaohound** is a streaming, concurrent, and highly modular Active Directory (AD) & Hybrid Azure (Entra ID) BloodHound JSON analysis engine. It parses raw ingestion collections, maps dangerous paths, scores OpSec risks, and automatically compiles **copy-paste-ready exploitation commands and playbooks** for penetration testers, CTF players, and red team operators.
