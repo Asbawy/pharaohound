@@ -579,6 +579,10 @@ def generate_html_report(
 
     <!-- MAIN GRAPH AREA -->
     <div id="graph-container">
+        <div id="controls" style="position: absolute; top: 20px; right: 20px; z-index: 5; display: flex; gap: 10px;">
+            <button onclick="togglePhysics()" style="background-color: rgba(30, 41, 59, 0.9); border: 1px solid #334155; border-radius: 6px; padding: 10px 16px; color: #fbbf24; font-size: 12px; cursor: pointer; backdrop-filter: blur(8px); font-weight: 700; transition: all 0.2s;">Toggle Physics</button>
+            <button onclick="exportCSV()" style="background-color: rgba(30, 41, 59, 0.9); border: 1px solid #334155; border-radius: 6px; padding: 10px 16px; color: #fbbf24; font-size: 12px; cursor: pointer; backdrop-filter: blur(8px); font-weight: 700; transition: all 0.2s;">Export Graph CSV</button>
+        </div>
         <div id="network"></div>
 
         <!-- LEGEND -->
@@ -632,9 +636,10 @@ def generate_html_report(
             to: e.to,
             label: '',
             color: e.color || {{ color: '#475569' }},
+            dashes: e.color && e.color.color === "#ef5350" ? [5, 5] : false,
             font: {{ color: '#94a3b8', size: 9, align: 'top', face: 'Inter, sans-serif' }},
             arrows: {{ to: {{ scaleFactor: 0.6 }} }},
-            width: 1.5,
+            width: e.color && e.color.color === "#ef5350" ? 3 : 1.5,
             title: `${{e.label}}\\n${{e.title || ''}}`,
             hoverWidth: 0.5,
             _label: e.label,
@@ -831,6 +836,37 @@ def generate_html_report(
                 }});
                 network.selectNodes([matchingNode.id]);
             }}
+        }}
+
+        // Controls interactions
+        let physicsEnabled = false;
+        function togglePhysics() {{
+            physicsEnabled = !physicsEnabled;
+            network.setOptions({{ physics: {{ enabled: physicsEnabled }} }});
+            const btn = document.querySelector('#controls button:nth-child(1)');
+            btn.style.color = physicsEnabled ? '#22c55e' : '#fbbf24';
+            btn.style.borderColor = physicsEnabled ? '#22c55e' : '#334155';
+        }}
+
+        function exportCSV() {{
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Type,ID_From,Label_To,Severity_IntelKey\\n";
+            
+            rawNodes.forEach(n => {{
+                csvContent += `Node,"${{n.id}}","${{n.label}}","${{n.severity || 'INFO'}}"\\n`;
+            }});
+            
+            rawEdges.forEach(e => {{
+                csvContent += `Edge,"${{e.from}}","${{e.to}}","${{e.label || 'Control'}}"\\n`;
+            }});
+            
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "pharaohound_graph_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }}
     </script>
 </body>

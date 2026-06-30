@@ -26,9 +26,7 @@ from typing import Dict, List
 from .theme import Severity
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # EDGE INTELLIGENCE CATALOG
-# ═══════════════════════════════════════════════════════════════════════════════
 EDGE_INTELLIGENCE: Dict[str, Dict] = {
     # ── ACL rights ──────────────────────────────────────────────────────────
     "GenericAll": {
@@ -854,9 +852,7 @@ EDGE_INTELLIGENCE: Dict[str, Dict] = {
 }
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # HIGH-LEVEL ACCESSORS
-# ═══════════════════════════════════════════════════════════════════════════════
 def intel_for_right(right: str) -> Dict:
     """Return the intelligence entry for a BloodHound edge/ACL right."""
     return EDGE_INTELLIGENCE.get(

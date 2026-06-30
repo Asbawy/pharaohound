@@ -15,9 +15,7 @@ from .models import ObjectStore
 from .theme import Severity
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # OPSEC NOISE MAP — per attack path type
-# ═══════════════════════════════════════════════════════════════════════════════
 # (noise_penalty, label, [event_ids])
 EDGE_NOISE: Dict[str, tuple] = {
     "Kerberoast":       (2, "🟡 LOW",    ["4769 (TGS-REQ — RC4 type 0x17)"]),

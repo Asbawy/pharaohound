@@ -20,9 +20,7 @@ import re
 from typing import Any, Dict, List, Optional
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # VARIABLE MAPPING — maps JSON keys to placeholder tokens
-# ═══════════════════════════════════════════════════════════════════════════════
 # The operator's JSON uses user-friendly keys; placeholders in commands use
 # the screaming-case format like <DC_IP>. We support both direct matches
 # and common aliases.
@@ -132,9 +130,7 @@ class PlaybookInterpolator:
                 r["alt_commands"] = [self.interpolate(cmd) for cmd in r["alt_commands"]]
         return recs
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # EVASION ENGINE
-# ═══════════════════════════════════════════════════════════════════════════════
 class EvasionEngine:
     """
     Injects AMSI and ETW bypass payloads into playbooks.

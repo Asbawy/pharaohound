@@ -19,9 +19,7 @@ from ..models import ObjectStore, _as_bool, _as_list, _as_str, _as_int
 from ..theme import Severity
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # CLIENT AUTHENTICATION EKU OID
-# ═══════════════════════════════════════════════════════════════════════════════
 CLIENT_AUTH_OID = "1.3.6.1.5.5.7.3.2"
 ANY_PURPOSE_OID = "2.5.29.37.0"
 ENROLLMENT_AGENT_OID = "1.3.6.1.4.1.311.20.2.1"

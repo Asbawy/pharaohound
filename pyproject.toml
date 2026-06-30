@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pharaohound"
-version = "1.0.0"
+version = "2.0.0"
 authors = [
     { name = "Asbawy" }
 ]
@@ -19,6 +19,8 @@ classifiers = [
 dependencies = [
     "ijson>=3.1",
     "rich>=13.0",
+    "ldap3>=2.9",
+    "dnspython>=2.3",
 ]
 
 [project.scripts]

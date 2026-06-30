@@ -14,9 +14,7 @@ from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # SAFETY HELPERS
-# ═══════════════════════════════════════════════════════════════════════════════
 def _safe_get(d: Optional[Dict[str, Any]], key: str, default: Any = None) -> Any:
     """Return d[key] if d is a dict and key is present, else default."""
     if not isinstance(d, dict):
@@ -83,9 +81,7 @@ def _extract_type(item: Any) -> str:
     return _as_str(item.get("ObjectType")) or _as_str(item.get("PrincipalType")) or ""
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # OBJECT DATACLASS
-# ═══════════════════════════════════════════════════════════════════════════════
 @dataclass
 class ADObject:
     """Common shape shared by every BloodHound object type."""
@@ -115,9 +111,7 @@ class ADObject:
         return [_as_str(a.get("RightName")) for a in self.aces if isinstance(a, dict)]
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # OBJECT STORE
-# ═══════════════════════════════════════════════════════════════════════════════
 class ObjectStore:
     """
     Central, type-aware registry of every AD object the parsers produced.
@@ -264,9 +258,7 @@ class ObjectStore:
         self._transitive_memberships = result
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # OBJECT BUILDERS — format-tolerant normalizers
-# ═══════════════════════════════════════════════════════════════════════════════
 def build_user(raw: Dict[str, Any]) -> ADObject:
     props = raw.get("Properties") or {}
     sid = _as_str(raw.get("ObjectIdentifier")) or _as_str(props.get("objectid"))
@@ -520,9 +512,7 @@ BUILDERS = {
 }
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # HIGH-VALUE GROUP CATALOG
-# ═══════════════════════════════════════════════════════════════════════════════
 HIGH_VALUE_GROUPS = [
     "DOMAIN ADMINS", "ENTERPRISE ADMINS", "ADMINISTRATORS",
     "ACCOUNT OPERATORS", "BACKUP OPERATORS", "SERVER OPERATORS",
@@ -537,9 +527,7 @@ def is_high_value_group_name(name: str) -> bool:
     return any(hv in upper for hv in HIGH_VALUE_GROUPS)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # PASSWORD-AGE UTIL
-# ═══════════════════════════════════════════════════════════════════════════════
 def calculate_password_age(pwdlastset: int) -> int:
     """Return password age in days. Large sentinel if never set / unknown."""
     if not pwdlastset or pwdlastset <= 0:

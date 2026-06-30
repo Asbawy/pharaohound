@@ -19,9 +19,7 @@ from typing import Any, Dict, List
 from .theme import Severity
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # JARGON TRANSLATIONS — AD terms → plain English step-by-step
-# ═══════════════════════════════════════════════════════════════════════════════
 JARGON: Dict[str, Dict[str, str]] = {
     "Kerberoastable Users": {
         "what": "Service accounts with guessable passwords",

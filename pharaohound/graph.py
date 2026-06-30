@@ -24,9 +24,7 @@ from typing import Dict, Iterable, List, Optional, Set, Tuple
 from .models import ADObject, ObjectStore
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # DANGEROUS RIGHTS CATALOG
-# ═══════════════════════════════════════════════════════════════════════════════
 DANGEROUS_ACL_RIGHTS: Set[str] = {
     "GenericAll", "GenericWrite", "WriteDacl", "WriteOwner",
     "Owns", "AddMember", "ForceChangePassword", "AllExtendedRights",
@@ -41,9 +39,7 @@ LATERAL_RIGHTS: Set[str] = {"AdminTo", "CanPSRemote", "ExecuteDCOM", "AllowedToD
 CRED_RIGHTS: Set[str] = {"ReadLAPSPassword", "HasSession", "DCSync"}
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # ACL TRAVERSAL
-# ═══════════════════════════════════════════════════════════════════════════════
 def principal_closure(store: ObjectStore, sid: str) -> Set[str]:
     """
     Return every SID that the principal `sid` *acts as* — itself plus every
@@ -153,9 +149,7 @@ def objects_targeted_by(
     return results
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # HIGH-VALUE GROUP MEMBERSHIP
-# ═══════════════════════════════════════════════════════════════════════════════
 def is_in_high_value_group(store: ObjectStore, sid: str) -> bool:
     """Is `sid` a transitive member of any high-value group?"""
     from .models import is_high_value_group_name
@@ -180,9 +174,7 @@ def high_value_group_membership(store: ObjectStore, sid: str) -> List[str]:
     return out
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # OU HIGH-VALUE CHECK
-# ═══════════════════════════════════════════════════════════════════════════════
 def ou_contains_high_value(store: ObjectStore, ou_sid: str) -> bool:
     """Does this OU have any high-value computer or user as a child?"""
     ou = store.ous.get(ou_sid)

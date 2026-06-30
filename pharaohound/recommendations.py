@@ -14,9 +14,7 @@ from .models import ObjectStore
 from .theme import Severity
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # OPSEC NOISE PENALTIES
-# ═══════════════════════════════════════════════════════════════════════════════
 # Scale: 0 = silent (no audit trail), 10 = extremely loud (instant SOC alert)
 OPSEC_PENALTIES: Dict[str, int] = {
     "LAPS Password Readers":            0,   # Standard LDAP read, no anomaly

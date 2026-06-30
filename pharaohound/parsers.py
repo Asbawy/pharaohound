@@ -39,9 +39,7 @@ except ImportError:  # pragma: no cover
     _HAVE_IJSON = False
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # FILE DISCOVERY
-# ═══════════════════════════════════════════════════════════════════════════════
 def discover_bloodhound_files(directory: str) -> List[Path]:
     """
     Find BloodHound JSON files in `directory`. Matches the SharpHound naming
@@ -73,9 +71,7 @@ def discover_bloodhound_files(directory: str) -> List[Path]:
     return sorted(found.values(), key=lambda p: p.name)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # STREAMING PARSERS
-# ═══════════════════════════════════════════════════════════════════════════════
 def _stream_with_ijson(filepath: Path) -> Iterator[dict]:
     """Yield BloodHound data records one at a time using ijson."""
     with open(filepath, "rb") as f:
@@ -220,9 +216,7 @@ def stream_records(filepath: Path) -> Iterator[dict]:
     yield from _stream_python_chunked(filepath)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # META EXTRACTION
-# ═══════════════════════════════════════════════════════════════════════════════
 def read_meta(filepath: Path) -> Dict[str, Any]:
     """
     Read the `meta` block of a BloodHound JSON file without loading the
@@ -257,9 +251,7 @@ def read_meta(filepath: Path) -> Dict[str, Any]:
         return {}
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # SINGLE-FILE LOADER
-# ═══════════════════════════════════════════════════════════════════════════════
 @dataclass
 class LoadResult:
     filepath: Path
@@ -300,15 +292,28 @@ def load_single_file(filepath: Path) -> LoadResult:
 
     try:
         count = 0
-        for record in stream_records(filepath):
+        records = stream_records(filepath)
+        while True:
+            try:
+                record = next(records)
+            except StopIteration:
+                break
+            except Exception as rec_err:
+                print(f"  [!] Skipping malformed record in {filepath.name}: {rec_err}", file=sys.stderr)
+                continue
+
             if not isinstance(record, dict):
                 continue
-            if builder:
-                result.objects.append(builder(record))
-            else:
-                # Unknown type — stash raw for completeness
-                result.objects.append(record)
-            count += 1
+            try:
+                if builder:
+                    result.objects.append(builder(record))
+                else:
+                    # Unknown type — stash raw for completeness
+                    result.objects.append(record)
+                count += 1
+            except Exception as build_err:
+                print(f"  [!] Skipping bad object building in {filepath.name}: {build_err}", file=sys.stderr)
+                continue
         result.count = count
     except Exception as e:
         result.error = f"{type(e).__name__}: {e}"
@@ -317,9 +322,7 @@ def load_single_file(filepath: Path) -> LoadResult:
     return result
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # PARALLEL LOADER
-# ═══════════════════════════════════════════════════════════════════════════════
 def load_directory(
     directory: str,
     max_workers: Optional[int] = None,
@@ -329,6 +332,21 @@ def load_directory(
     Load every BloodHound JSON file in `directory` in parallel and
     register the resulting objects in a single ObjectStore.
     """
+    if directory.lower().endswith(".zip") and os.path.isfile(directory):
+        import tempfile
+        import zipfile
+        import shutil
+        
+        log(f"{Colors.TURQUOISE}[⚱] Extracting archive {directory}…{Colors.RESET}")
+        temp_dir = tempfile.mkdtemp(prefix="pharaohound_")
+        try:
+            with zipfile.ZipFile(directory, "r") as zf:
+                zf.extractall(temp_dir)
+            return load_directory(temp_dir, max_workers, log)
+        finally:
+            # Clean up the temporary directory after parsing completes
+            shutil.rmtree(temp_dir, ignore_errors=True)
+
     files = discover_bloodhound_files(directory)
     if not files:
         log(f"{Colors.CARNELIAN}[✗] No BloodHound JSON files found in: {directory}{Colors.RESET}")

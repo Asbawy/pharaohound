@@ -6,9 +6,7 @@ theme.py — Pharaohound ANSI palette, severity levels, and banner art.
 from __future__ import annotations
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # ANSI COLOR PALETTE — Pharaohound Theme
-# ═══════════════════════════════════════════════════════════════════════════════
 class Colors:
     """Pharaohound color palette for terminal output."""
 
@@ -31,9 +29,7 @@ class Colors:
     REVERSE = "\033[7m"
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # SEVERITY LEVELS
-# ═══════════════════════════════════════════════════════════════════════════════
 class Severity:
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
@@ -67,16 +63,14 @@ SEVERITY_GLYPH = {
 }
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # BANNER
-# ═══════════════════════════════════════════════════════════════════════════════
 BANNER = rf"""{Colors.GOLD}
    ▄ ▄▄▄▄▄ ▄▄ ▄▄  ▄▄▄  ▄▄▄▄   ▄▄▄   ▄▄▄  ▄▄ ▄▄  ▄▄▄  ▄▄ ▄▄ ▄▄  ▄▄ ▄▄▄▄ 
 ▀██▀▀██ ██▄▄█ ▄█▀█▄ ██▀██ ▄█▀█▄ ▄█▀██ ██▄▄█ ▄█▀██ ██ ██ ███▄██ ██▀██
  ██▀▀▀  █▀▀██ ▓▓▀▒▒ ▓▓▀█▄ ▓▓▀▒▒ ▓▓ ▓▓ █▀▀██ ▓▓ ▓▓ ▓▓ █▀ ▓▓ ▀▓▓ ▓▓ ▓▓
  ▀▀     ▀▀ ▀▀ ▀▀ ▀▀ ▀▀ ▀▀ ▀▀ ▀▀  ▀▀▀  ▀▀ ▀▀  ▀▀▀  ▀▀▀▀  ▀▀  ▀▀ ▀▀▀▀ {Colors.RESET}
 {Colors.TURQUOISE}                            ☥  P H A R A O H O U N D  ☥                            {Colors.RESET}
-{Colors.DIM}              v1.0.0 | Streaming • Concurrent • Modular • Noob-Friendly                    {Colors.RESET}
+{Colors.DIM}              v2.0.0 | Collector • Framework • Concurrent • Modular                    {Colors.RESET}
 """
 
 

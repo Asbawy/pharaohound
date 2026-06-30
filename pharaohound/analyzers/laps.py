@@ -18,6 +18,8 @@ class LAPSReadersAnalyzer(BaseAnalyzer):
         data = []
         # Walk every computer's ACEs for ReadLAPSPassword / AllExtendedRights
         for comp in store.iter_by_type("computer"):
+            if not comp or not comp.aces:
+                continue
             for ace in comp.aces:
                 if not isinstance(ace, dict):
                     continue

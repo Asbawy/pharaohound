@@ -19,9 +19,9 @@ class AzureAdvancedAnalyzer(BaseAnalyzer):
         # In a hybrid BloodHound dataset (e.g. from AzureHound), we have azureserviceprincipal, azureuser, etc.
         # We will iterate through these. 
         for obj in store.all_objects():
-            if obj.type == "azuretenant":
+            if obj.object_type == "azuretenant":
                 data.append({"name": obj.name, "type": "Azure Tenant", "sid": obj.sid})
-            elif "azure" in obj.type:
+            elif "azure" in obj.object_type:
                 if "sso" in obj.name.lower() or "seamless" in obj.name.lower():
                     data.append({"name": obj.name, "type": "Seamless SSO Target", "sid": obj.sid})
 

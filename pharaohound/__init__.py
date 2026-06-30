@@ -1,18 +1,20 @@
 """
-Pharaohound v1.0.0
+Pharaohound v2.0.0
 ==================
 
 A streaming, concurrent, modular BloodHound JSON analysis engine
-that maps attack paths in Active Directory environments and produces
-noob-friendly remediation/exploitation blueprints.
+and Active Directory data collection framework. Collects AD data
+via LDAP, maps attack paths, and produces noob-friendly
+remediation/exploitation blueprints.
 
 Usage:
-    python pharaohound.py <directory_with_bloodhound_jsons>
-    python -m pharaohound <directory>
+    python -m pharaohound                    # Launch interactive framework shell
+    python -m pharaohound <directory>         # Analyze existing BloodHound data
+    python -m pharaohound collect -t DC -u U -p P -d DOMAIN
 """
 
 from .theme import Colors, Severity, SEVERITY_RANK
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __author__ = "Asbawy"
 __license__ = "MIT"

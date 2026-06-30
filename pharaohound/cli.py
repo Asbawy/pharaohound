@@ -28,19 +28,46 @@ from .update import check_for_updates
 from . import __version__
 
 
-def parse_args(argv=None) -> argparse.Namespace:
+def _build_collect_parser() -> argparse.ArgumentParser:
+    """Build the parser for the 'collect' subcommand."""
+    p = argparse.ArgumentParser(
+        prog="pharaohound collect",
+        description="Collect AD data via LDAP and save as BloodHound-compatible JSON files",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    p.add_argument("-t", "--target", required=True, help="Target Domain Controller IP or hostname")
+    p.add_argument("-u", "--user", dest="coll_user", required=True, help="Username for authentication")
+    p.add_argument("-p", "--pass", dest="coll_pass", required=True, help="Password for authentication")
+    p.add_argument("-d", "--domain", dest="coll_domain", required=True, help="Domain name (e.g., CORP.LOCAL)")
+    p.add_argument("--auth", default="ntlm", choices=["ntlm", "simple", "kerberos"],
+                    help="Authentication method (default: ntlm)")
+    p.add_argument("--dns-server", default=None, help="Custom DNS server IP")
+    p.add_argument("-o", "--output", dest="coll_output", default=".", help="Output directory (default: cwd)")
+    p.add_argument("--method", default="All",
+                    choices=["All", "Default", "DCOnly", "ObjectProps", "Trusts", "Container", "CertServices", "ACL"],
+                    help="Collection method (default: All)")
+    p.add_argument("--no-zip", action="store_true", help="Save individual JSON files instead of ZIP")
+    p.add_argument("--secure", action="store_true", help="Use LDAPS (SSL/TLS)")
+    p.add_argument("--analyze", action="store_true", help="Automatically analyze after collection")
+    return p
+
+
+def _build_main_parser() -> argparse.ArgumentParser:
+    """Build the main analysis parser."""
     p = argparse.ArgumentParser(
         prog="pharaohound",
-        description="Pharaohound — BloodHound JSON Analysis Engine",
+        description="Pharaohound — BloodHound JSON Analysis Engine & AD Collection Framework",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  pharaohound.py /path/to/bloodhound_jsons/\n"
-            "  pharaohound.py /path/to/jsons/ --user JSMITH@CORP.LOCAL\n"
-            "  pharaohound.py /path/to/jsons/ --all --output ./reports/\n"
+            "  pharaohound                                     # Launch interactive framework shell\n"
+            "  pharaohound /path/to/bloodhound_jsons/           # Analyze existing data\n"
+            "  pharaohound /path/to/jsons/ --user JSMITH@CORP.LOCAL\n"
+            "  pharaohound collect --target 10.10.10.10 --user admin --pass 'P@ss' --domain CORP.LOCAL\n"
+            "  pharaohound /path/to/jsons/ --all --output ./reports/\n"
         ),
     )
-    p.add_argument("directory", nargs="?", help="Directory containing BloodHound JSON files (omit only with --list-analyzers)")
+    p.add_argument("directory", nargs="?", help="Directory containing BloodHound JSON files (omit for interactive shell)")
     p.add_argument("-o", "--output", default=".", help="Output directory for reports (default: cwd)")
     p.add_argument(
         "--format", choices=["text", "html", "both", "console-only"], default="both",
@@ -54,6 +81,7 @@ def parse_args(argv=None) -> argparse.Namespace:
     p.add_argument("--no-rich", action="store_true", help="Disable rich tables, use plain ASCII fallback")
     p.add_argument("--workers", type=int, default=None, help="Parallel parser worker count (default: min(8, n_files))")
     p.add_argument("--list-analyzers", action="store_true", help="List all available analyzers and exit")
+    p.add_argument("--list-modules", action="store_true", help="List all auto-exploitation modules and exit")
     p.add_argument("--verbose", action="store_true", help="Verbose output")
     p.add_argument("--noob", action="store_true", help="Noob mode: simplified output with jargon-free language")
     p.add_argument("--evasion", action="store_true", help="Evasion mode: prepend AMSI/ETW bypass payloads to PowerShell playbooks")
@@ -61,7 +89,30 @@ def parse_args(argv=None) -> argparse.Namespace:
                    help="Path to a JSON file with environment variables for command interpolation")
     p.add_argument("--shell", action="store_true",
                    help="Drop into an interactive shell after analysis for exploring results")
-    return p.parse_args(argv)
+    return p
+
+
+def parse_args(argv=None) -> argparse.Namespace:
+    """
+    Parse CLI arguments with manual 'collect' subcommand detection.
+
+    Avoids argparse conflicts between subparsers and optional positional args
+    by checking if the first argument is 'collect' before dispatching.
+    """
+    raw_argv = argv if argv is not None else sys.argv[1:]
+
+    # Check if user invoked the 'collect' subcommand
+    if raw_argv and raw_argv[0] == "collect":
+        parser = _build_collect_parser()
+        args = parser.parse_args(raw_argv[1:])
+        args.subcommand = "collect"
+        return args
+
+    # Otherwise parse with the main parser
+    parser = _build_main_parser()
+    args = parser.parse_args(raw_argv)
+    args.subcommand = None
+    return args
 
 
 def disable_colors() -> None:
@@ -71,9 +122,7 @@ def disable_colors() -> None:
             setattr(Colors, attr, "")
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # USER SELECTION
-# ═══════════════════════════════════════════════════════════════════════════════
 def _resolve_user_by_name(store: ObjectStore, name: str) -> Optional[ADObject]:
     """Find a user by name (case-insensitive, supports USER@DOMAIN or just USER)."""
     name_upper = name.strip().upper()
@@ -189,6 +238,46 @@ def select_compromised_users(store: ObjectStore, args: argparse.Namespace) -> Op
     return selected_sids
 
 
+def run_collect(args: argparse.Namespace) -> int:
+    """Handle the 'collect' subcommand."""
+    try:
+        from .collector import ADCollector
+    except ImportError as e:
+        print(f"{Colors.CARNELIAN}[✗] Collector dependencies missing: {e}{Colors.RESET}")
+        print(f"{Colors.OCHRE}    Install with: pip install ldap3{Colors.RESET}")
+        return 1
+
+    collector = ADCollector(
+        target=args.target,
+        username=args.coll_user,
+        password=args.coll_pass,
+        domain=args.coll_domain,
+        auth_method=args.auth,
+        dns_server=args.dns_server,
+        output_dir=args.coll_output,
+        use_zip=not args.no_zip,
+        secure=args.secure,
+    )
+
+    if not collector.connect():
+        return 1
+
+    result = collector.collect(method=args.method)
+    collector.disconnect()
+
+    if not result:
+        return 1
+
+    # Auto-analyze if requested
+    if args.analyze and os.path.isdir(args.coll_output):
+        print(f"\n{Colors.GOLD}[☥] Auto-analyzing collected data…{Colors.RESET}\n")
+        # Re-run the analysis pipeline on the collected output
+        analysis_argv = [args.coll_output, "--all", "-o", args.coll_output]
+        return run(analysis_argv)
+
+    return 0
+
+
 def run(argv=None) -> int:
     if sys.platform == "win32":
         try:
@@ -202,6 +291,9 @@ def run(argv=None) -> int:
     if args.no_color:
         disable_colors()
 
+    from .logging_setup import setup_logging
+    setup_logging(verbose=args.verbose)
+
     reporter = ConsoleReporter(use_rich=not args.no_rich)
     reporter.banner()
 
@@ -211,6 +303,10 @@ def run(argv=None) -> int:
         print(f"{Colors.GOLD}[📢] A newer version of Pharaohound is available: {Colors.TURQUOISE}{new_release}{Colors.GOLD} (Current: v{__version__}){Colors.RESET}")
         print(f"{Colors.GOLD}     Update via: {Colors.TURQUOISE}pip install --upgrade git+https://github.com/Asbawy/pharaohound.git{Colors.RESET}\n")
 
+    # ── Handle 'collect' subcommand ──────────────────────────────────────
+    if hasattr(args, 'subcommand') and args.subcommand == "collect":
+        return run_collect(args)
+
     if args.list_analyzers:
         print(f"{Colors.GOLD}[☥] Registered analyzers:{Colors.RESET}\n")
         for cls in REGISTRY.all_analyzers():
@@ -218,13 +314,26 @@ def run(argv=None) -> int:
             print(f"  {Colors.TURQUOISE}{inst.name:<32}{Colors.RESET}  {inst.description}")
         return 0
 
+    if args.list_modules:
+        from .modules import ModuleRegistry
+        registry = ModuleRegistry()
+        registry.discover("pharaohound.modules")
+        print(f"{Colors.GOLD}[☥] Registered auto-exploitation modules:{Colors.RESET}\n")
+        for mod in registry.list_modules():
+            print(f"  {Colors.TURQUOISE}{mod['name']:<20}{Colors.RESET} Edge: {mod['edge_type']:<15} {Colors.DIM}({mod['severity']}){Colors.RESET}")
+            if mod.get('description'):
+                print(f"      {Colors.DIM}{mod['description'][:80]}...{Colors.RESET}")
+        return 0
+
+    # ── No directory given = launch framework shell ─────────────────────
     if not args.directory:
-        parse_args(["--help"])
-        return 2
+        from .shell import run_framework
+        run_framework()
+        return 0
 
     directory = os.path.abspath(args.directory)
-    if not os.path.isdir(directory):
-        print(f"{Colors.CARNELIAN}[✗] Not a directory: {directory}{Colors.RESET}")
+    if not (os.path.isdir(directory) or (os.path.isfile(directory) and directory.lower().endswith(".zip"))):
+        print(f"{Colors.CARNELIAN}[✗] Not a directory or ZIP file: {directory}{Colors.RESET}")
         return 2
 
     # ── 1. PARSE ────────────────────────────────────────────────────────────

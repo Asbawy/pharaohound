@@ -29,9 +29,7 @@ except ImportError:  # pragma: no cover
     _HAVE_RICH = False
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # FALLBACK ASCII TABLE
-# ═══════════════════════════════════════════════════════════════════════════════
 import re as _re
 _ANSI_RE = _re.compile(r"\033\[[0-9;]*m")
 
@@ -79,9 +77,7 @@ def _ascii_table(headers: List[str], rows: List[List[str]], col_widths: List[int
     return "\n".join(lines)
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # CONSOLE REPORTER
-# ═══════════════════════════════════════════════════════════════════════════════
 class ConsoleReporter:
     def __init__(self, use_rich: bool = _HAVE_RICH) -> None:
         self.use_rich = use_rich and _HAVE_RICH
@@ -100,9 +96,7 @@ class ConsoleReporter:
 
     # ── Stats table ─────────────────────────────────────────────────────────
     def print_stats(self, stats: Dict[str, int]) -> None:
-        self._print(f"\n{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}")
         self._print(colorize("  ☥  D O M A I N   S T A T I S T I C S", Colors.GOLD, bold=True))
-        self._print(f"{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}\n")
 
         rows = [
             [colorize("Users", Colors.TURQUOISE),      str(stats.get("users", 0))],
@@ -155,9 +149,7 @@ class ConsoleReporter:
             risk_label = "LOW — Relatively secure"
             risk_color = Colors.MALACHITE
 
-        self._print(f"\n{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}")
         self._print(colorize("  ☥  R I S K   A S S E S S M E N T", Colors.GOLD, bold=True))
-        self._print(f"{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}\n")
         self._print(f"  Risk Level: {colorize(risk_label, risk_color, bold=True)}\n")
 
         rows = [
@@ -179,9 +171,7 @@ class ConsoleReporter:
 
     # ── Findings ────────────────────────────────────────────────────────────
     def print_findings(self, findings: List[Dict[str, Any]]) -> None:
-        self._print(f"\n{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}")
         self._print(colorize("  ☥  F I N D I N G S", Colors.GOLD, bold=True))
-        self._print(f"{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}\n")
 
         sorted_findings = sorted(findings, key=lambda f: SEVERITY_RANK.get(f["severity"], 99))
         for f in sorted_findings:
@@ -324,9 +314,7 @@ class ConsoleReporter:
 
     # ── Attack paths ────────────────────────────────────────────────────────
     def print_attack_paths(self, paths: List[Dict[str, Any]]) -> None:
-        self._print(f"\n{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}")
         self._print(colorize("  ⚔  A T T A C K   P A T H S", Colors.GOLD, bold=True))
-        self._print(f"{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}\n")
 
         if not paths:
             self._print(f"  {colorize('No clear attack paths detected. The domain may be relatively secure.', Colors.MALACHITE)}\n")
@@ -354,9 +342,7 @@ class ConsoleReporter:
 
     # ── Recommendations ─────────────────────────────────────────────────────
     def print_recommendations(self, recs: List[Dict[str, Any]]) -> None:
-        self._print(f"\n{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}")
         self._print(colorize("  ☥  P R I O R I T I Z E D   R E C O M M E N D A T I O N S", Colors.GOLD, bold=True))
-        self._print(f"{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}\n")
 
         if not recs:
             self._print(f"  {colorize('No specific recommendations — domain looks healthy.', Colors.MALACHITE)}\n")
@@ -380,9 +366,7 @@ class ConsoleReporter:
 
     # ── Final summary ───────────────────────────────────────────────────────
     def print_summary(self, findings: List[Dict[str, Any]], attack_paths: List[Dict[str, Any]], recs: List[Dict[str, Any]]) -> None:
-        self._print(f"\n{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}")
         self._print(colorize("  ☥  A N A L Y S I S   C O M P L E T E  ☥", Colors.GOLD, bold=True))
-        self._print(f"{colorize('═══════════════════════════════════════════════════════════════════════════', Colors.GOLD)}\n")
 
         crit = sum(1 for f in findings if f["severity"] == Severity.CRITICAL)
         high = sum(1 for f in findings if f["severity"] == Severity.HIGH)

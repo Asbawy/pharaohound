@@ -21,9 +21,7 @@ from .graph import (
 from .models import ADObject, ObjectStore
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # FINDING CLASSIFICATION
-# ═══════════════════════════════════════════════════════════════════════════════
 # Findings that any authenticated user can exploit — always shown.
 ALWAYS_RELEVANT = {
     "Kerberoastable Users",
@@ -53,9 +51,7 @@ PRINCIPAL_KEYED = {
 }
 
 
-# ═══════════════════════════════════════════════════════════════════════════════
 # REACHABILITY CONTEXT
-# ═══════════════════════════════════════════════════════════════════════════════
 class ReachabilityContext:
     """
     Represents the transitive reach of one or more compromised principals.
