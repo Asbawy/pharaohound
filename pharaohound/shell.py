@@ -1467,7 +1467,7 @@ class PharaohoundShell:
         filepath = os.path.join(sess_dir, session_name)
 
         session_data = {
-            "version": "2.0.0",
+            "version": "2.0.1",
             "timestamp": datetime.now().isoformat(),
             "domain": self.store.primary_domain_name(),
             "collection_path": self._collection_path,

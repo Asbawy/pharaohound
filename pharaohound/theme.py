@@ -70,7 +70,7 @@ BANNER = rf"""{Colors.GOLD}
  ██▀▀▀  █▀▀██ ▓▓▀▒▒ ▓▓▀█▄ ▓▓▀▒▒ ▓▓ ▓▓ █▀▀██ ▓▓ ▓▓ ▓▓ █▀ ▓▓ ▀▓▓ ▓▓ ▓▓
  ▀▀     ▀▀ ▀▀ ▀▀ ▀▀ ▀▀ ▀▀ ▀▀ ▀▀  ▀▀▀  ▀▀ ▀▀  ▀▀▀  ▀▀▀▀  ▀▀  ▀▀ ▀▀▀▀ {Colors.RESET}
 {Colors.TURQUOISE}                            ☥  P H A R A O H O U N D  ☥                            {Colors.RESET}
-{Colors.DIM}              v2.0.0 | Collector • Framework • Concurrent • Modular                    {Colors.RESET}
+{Colors.DIM}              v2.0.1 | Collector • Framework • Concurrent • Modular                    {Colors.RESET}
 """
 
 
