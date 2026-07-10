@@ -2,7 +2,7 @@
 > **The Active Directory Collection, Analysis & Exploitation Framework**
 
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org)
-[![Version](https://img.shields.io/badge/version-2.0.1-gold.svg)](https://github.com/Asbawy/pharaohound)
+[![Version](https://img.shields.io/badge/version-2.0.2-gold.svg)](https://github.com/Asbawy/pharaohound)
 [![Category: Active Directory](https://img.shields.io/badge/Focus-Active%20Directory%20%26%20Azure-teal.svg)](https://github.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -104,7 +104,7 @@ For every discovered vulnerability type, Pharaohound generates deep, ELI5 (Expla
 
 ```text
 ├── pharaohound/                     # Main Python package
-│   ├── __init__.py                  # v2.0.1 version and package info
+│   ├── __init__.py                  # v2.0.2 version and package info
 │   ├── __main__.py                  # Entry point for 'python -m pharaohound'
 │   ├── cli.py                       # CLI parsing, subcommands, and engine coordinator
 │   ├── shell.py                     # ★ Framework interactive shell (primary interface)
@@ -168,7 +168,7 @@ For every discovered vulnerability type, Pharaohound generates deep, ELI5 (Expla
 │       └── html.py                  # Interactive HTML graph reporter (Vis.js)
 │
 ├── pharaohound.py                   # Root script launcher wrapper
-├── pyproject.toml                   # PEP 517 build config (v2.0.1)
+├── pyproject.toml                   # PEP 517 build config (v2.0.2)
 ├── requirements.txt                 # Runtime dependencies
 └── vars.json                        # Example variables config
 ```
