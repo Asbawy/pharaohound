@@ -388,7 +388,7 @@ class LDAPClient:
             self._ccache_file = ccache_file
 
             # 3. Set KRB5CCNAME so GSSAPI/ldap3 can find the ticket
-            os.environ["KRB5CCNAME"] = ccache_file
+            os.environ["KRB5CCNAME"] = f"FILE:{ccache_file}"
             print(f"  {Colors.DIM}  TGT obtained, connecting to {dc_host}…{Colors.RESET}")
 
             # 4. Connect to LDAP using the DC hostname (required for SPN matching)
