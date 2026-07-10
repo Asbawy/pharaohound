@@ -73,6 +73,7 @@ For every discovered vulnerability type, Pharaohound generates deep, ELI5 (Expla
 ### 🔌 Data Collection
 *   **Built-in LDAP Collector**: Connect directly to Domain Controllers via LDAP to enumerate users, groups, computers, domains, GPOs, OUs, containers, Certificate Authorities, and Certificate Templates.
 *   **Authentication Methods**: NTLM (`DOMAIN\user` + password), Kerberos (ccache/TGT), and Simple bind.
+*   **Smart Auth Fallback**: Automatically attempts Kerberos authentication (obtaining a TGT via `impacket` and performing SASL/GSSAPI bind using the resolved DC hostname) if NTLM authentication fails or is disabled.
 *   **BloodHound-Compatible Output**: Saves collected data as standard SharpHound JSON files or ZIP archives — importable by both Pharaohound and the BloodHound GUI.
 *   **Collection Methods**: `All`, `Default`, `DCOnly`, `ObjectProps`, `Trusts`, `Container`, `CertServices`, `ACL`.
 *   **Custom DNS**: Specify a custom DNS server with `--dns-server` for environments without default DNS resolution.
@@ -812,6 +813,7 @@ The `ModuleRegistry` auto-discovers all modules at runtime via `pkgutil`, enabli
 | `rich>=13.0` | Optional¹ | Rich terminal tables and panels |
 | `ldap3>=2.9` | Required for `collect` | LDAP client for AD enumeration |
 | `dnspython>=2.3` | Optional | Custom DNS server support |
+| `impacket>=0.11` | Optional | Kerberos TGT retrieval for smart auth fallback |
 
 ¹ Falls back to built-in alternatives if not installed. Included in default `pip install .`.
 

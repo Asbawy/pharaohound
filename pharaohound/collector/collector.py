@@ -139,6 +139,8 @@ class ADCollector:
         """
         Establish LDAP connection using the configured auth method.
 
+        If NTLM fails and credentials are available, automatically falls back
+        to Kerberos authentication (TGT via impacket + SASL/Kerberos bind).
         Returns True if connected successfully.
         """
         print(f"\n{Colors.GOLD}[☥] Connecting to {Colors.TURQUOISE}{self.target}{Colors.GOLD}…{Colors.RESET}")
@@ -151,6 +153,29 @@ class ADCollector:
                 return False
             print(f"  {Colors.DIM}Auth: NTLM ({self.domain}\\{self.username}){Colors.RESET}")
             success = self.client.connect_ntlm(self.domain, self.username, self.password)
+
+            # Auto-fallback: NTLM failed → try Kerberos with the same credentials
+            if not success and self.domain and self.username and self.password:
+                print(
+                    f"\n  {Colors.OCHRE}[!] NTLM failed — attempting Kerberos fallback…{Colors.RESET}"
+                )
+                print(f"  {Colors.DIM}Auth: Kerberos (TGT via impacket){Colors.RESET}")
+
+                # Resolve DC hostname (Kerberos needs FQDN, not IP)
+                dc_host = self.dns_resolver.resolve_dc_hostname(self.domain, dc_ip=self.target)
+                if dc_host:
+                    print(f"  {Colors.DIM}  DC hostname: {dc_host}{Colors.RESET}")
+                    success = self.client.connect_kerberos_with_password(
+                        domain=self.domain,
+                        username=self.username,
+                        password=self.password,
+                        dc_host=dc_host,
+                        kdc_host=self.target,
+                    )
+                else:
+                    print(
+                        f"  {Colors.CARNELIAN}[✗] Could not resolve DC hostname for Kerberos.{Colors.RESET}"
+                    )
 
         elif self.auth_method == "simple":
             if not self.username or not self.password:

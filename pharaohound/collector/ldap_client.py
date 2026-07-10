@@ -14,7 +14,9 @@ Provides a unified LDAP client that supports:
 from __future__ import annotations
 
 import ssl
+import os
 import sys
+import tempfile
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..theme import Colors
@@ -329,8 +331,97 @@ class LDAPClient:
             print(f"  {Colors.CARNELIAN}[✗] Kerberos bind failed: {e}{Colors.RESET}")
             return False
 
+    def connect_kerberos_with_password(
+        self, domain: str, username: str, password: str, dc_host: str, kdc_host: Optional[str] = None
+    ) -> bool:
+        """
+        Connect using Kerberos by programmatically obtaining a TGT.
+
+        Uses impacket to get a TGT with the provided credentials, saves it
+        to a ccache file, then binds to LDAP via SASL/Kerberos. This mirrors
+        how bloodhound-python authenticates and works in environments where
+        NTLM is restricted.
+
+        Args:
+            domain:   AD domain name (e.g., 'hercules.htb')
+            username: Username (e.g., 'natalie.a')
+            password: Password
+            dc_host:  DC FQDN (e.g., 'dc.hercules.htb') — required for SPN
+            kdc_host: KDC IP address (optional, defaults to self.target)
+        """
+        # Check impacket availability
+        try:
+            from impacket.krb5.kerberosv5 import getKerberosTGT  # type: ignore
+            from impacket.krb5.types import Principal  # type: ignore
+            from impacket.krb5 import constants as krb5_constants  # type: ignore
+            from impacket.krb5.ccache import CCache  # type: ignore
+        except ImportError:
+            print(
+                f"  {Colors.OCHRE}[!] impacket is not installed — Kerberos fallback unavailable.{Colors.RESET}\n"
+                f"  {Colors.DIM}    Install with: pip install impacket{Colors.RESET}"
+            )
+            return False
+
+        try:
+            # 1. Get TGT using impacket
+            domain_upper = domain.upper()
+            user_principal = Principal(
+                username, type=krb5_constants.PrincipalNameType.NT_PRINCIPAL.value
+            )
+
+            print(f"  {Colors.DIM}  Getting TGT for {username}@{domain_upper}…{Colors.RESET}")
+            tgt, cipher, oldSessionKey, sessionKey = getKerberosTGT(
+                user_principal,
+                password,
+                domain_upper,
+                lmhash=b"",
+                nthash=b"",
+                aesKey=None,
+                kdcHost=kdc_host or self.target,
+            )
+
+            # 2. Save TGT to ccache file
+            ccache = CCache()
+            ccache.fromTGT(tgt, oldSessionKey, sessionKey)
+            ccache_file = tempfile.mktemp(suffix=".ccache", prefix="pharaohound_")
+            ccache.saveFile(ccache_file)
+            self._ccache_file = ccache_file
+
+            # 3. Set KRB5CCNAME so GSSAPI/ldap3 can find the ticket
+            os.environ["KRB5CCNAME"] = ccache_file
+            print(f"  {Colors.DIM}  TGT obtained, connecting to {dc_host}…{Colors.RESET}")
+
+            # 4. Connect to LDAP using the DC hostname (required for SPN matching)
+            tls_config = None
+            if self.secure:
+                tls_config = Tls(validate=ssl.CERT_NONE)
+
+            self._server = Server(
+                dc_host,
+                port=self.port,
+                use_ssl=self.secure,
+                tls=tls_config,
+                get_info=ALL,
+                connect_timeout=self.timeout,
+            )
+
+            self._conn = Connection(
+                self._server,
+                authentication=SASL,
+                sasl_mechanism=KERBEROS,
+                auto_bind=True,
+                receive_timeout=self.timeout,
+            )
+
+            self._detect_naming_contexts()
+            return True
+
+        except Exception as e:
+            print(f"  {Colors.CARNELIAN}[✗] Kerberos (TGT) bind failed: {e}{Colors.RESET}")
+            return False
+
     def disconnect(self) -> None:
-        """Close the LDAP connection."""
+        """Close the LDAP connection and clean up credentials."""
         if self._conn:
             try:
                 self._conn.unbind()
@@ -338,6 +429,15 @@ class LDAPClient:
                 pass
             self._conn = None
         self._server = None
+
+        # Clean up ccache file if we created one
+        ccache_file = getattr(self, "_ccache_file", None)
+        if ccache_file:
+            try:
+                os.remove(ccache_file)
+            except OSError:
+                pass
+            self._ccache_file = None
 
     def _detect_naming_contexts(self) -> None:
         """Auto-detect domain DN, configuration DN, etc. from RootDSE."""

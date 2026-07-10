@@ -193,6 +193,50 @@ class DNSResolver:
             self._cache[hostname] = ip
         return ip
 
+    def resolve_dc_hostname(self, domain: str, dc_ip: Optional[str] = None) -> Optional[str]:
+        """
+        Resolve the Domain Controller's FQDN from a domain name.
+
+        Uses SRV record lookup (_ldap._tcp.dc._msdcs.<domain>) to discover
+        the DC hostname. This is required for Kerberos authentication because
+        SPN matching requires a hostname, not an IP address.
+
+        Falls back to constructing 'dc.<domain>' if SRV lookup fails.
+        """
+        # 1. Try SRV record lookup (most reliable)
+        try:
+            import dns.resolver as dns_resolver  # type: ignore
+
+            resolver = dns_resolver.Resolver()
+            if dc_ip:
+                resolver.nameservers = [dc_ip]
+            elif self.dns_server:
+                resolver.nameservers = [self.dns_server]
+            resolver.timeout = 5
+            resolver.lifetime = 10
+
+            srv_query = f"_ldap._tcp.dc._msdcs.{domain}"
+            answers = resolver.resolve(srv_query, "SRV")
+            if answers:
+                # SRV record target ends with a dot, strip it
+                dc_host = str(answers[0].target).rstrip(".")
+                if dc_host:
+                    return dc_host.lower()
+        except Exception:
+            pass
+
+        # 2. Try reverse DNS on the DC IP
+        if dc_ip:
+            try:
+                hostname, _, _ = socket.gethostbyaddr(dc_ip)
+                if hostname and "." in hostname:
+                    return hostname.lower()
+            except (socket.herror, socket.gaierror):
+                pass
+
+        # 3. Fallback: construct dc.<domain> as a best guess
+        return f"dc.{domain.lower()}"
+
     @property
     def cache_size(self) -> int:
         return len(self._cache)
