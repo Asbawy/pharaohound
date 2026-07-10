@@ -256,7 +256,7 @@ class ADCollector:
 
         start_time = time.time()
 
-        # ── Enumerate each type ──────────────────────────────────────────────
+        # Enumerate each type
         if "domains" in types_to_collect:
             self._collect_type("domains", DomainEnumerator)
 
@@ -288,7 +288,7 @@ class ADCollector:
         if "acls" in types_to_collect:
             self._collect_acls()
 
-        # ── Finalize output ──────────────────────────────────────────────────
+        # Finalize output
         elapsed = time.time() - start_time
         result = self._output.finalize()
 

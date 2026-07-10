@@ -102,7 +102,7 @@ class ReachabilityContext:
             for obj, right in targets:
                 self._reachable.add(obj.sid)
 
-    # ── Finding filter ──────────────────────────────────────────────────────
+    # Finding filter
     def filter_findings(
         self, findings: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
@@ -179,7 +179,7 @@ class ReachabilityContext:
 
         return False
 
-    # ── Attack path filter ──────────────────────────────────────────────────
+    # Attack path filter
     def filter_attack_paths(
         self, paths: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
@@ -223,7 +223,7 @@ class ReachabilityContext:
 
         return False
 
-    # ── Recommendation filter ───────────────────────────────────────────────
+    # Recommendation filter
     def filter_recommendations(
         self, recommendations: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:

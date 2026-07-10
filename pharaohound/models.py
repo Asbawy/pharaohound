@@ -139,7 +139,7 @@ class ObjectStore:
         # Build cache for transitive group memberships (populated lazily)
         self._transitive_memberships: Optional[Dict[str, set]] = None
 
-    # ── Registration ────────────────────────────────────────────────────────
+    # Registration
     def register(self, obj: ADObject) -> None:
         bucket = self._bucket(obj.object_type)
         bucket[obj.sid] = obj
@@ -161,7 +161,7 @@ class ObjectStore:
             "azure": self.azure,
         }.get(otype, {})
 
-    # ── Lookups ─────────────────────────────────────────────────────────────
+    # Lookups
     def resolve_sid(self, sid: str) -> ADObject:
         """Return the ADObject whose SID matches, or a placeholder."""
         if not sid:
@@ -192,7 +192,7 @@ class ObjectStore:
         for obj in self._bucket(otype).values():
             yield obj
 
-    # ── Stats ───────────────────────────────────────────────────────────────
+    # Stats
     def stats(self) -> Dict[str, int]:
         return {
             "users": len(self.users),
@@ -214,7 +214,7 @@ class ObjectStore:
                 return d.name
         return "Unknown"
 
-    # ── Transitive group memberships ────────────────────────────────────────
+    # Transitive group memberships
     def transitive_groups_for(self, sid: str) -> set:
         """Return the set of all group SIDs that `sid` is a member of, transitively."""
         if self._transitive_memberships is None:

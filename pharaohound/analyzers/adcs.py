@@ -76,7 +76,7 @@ class ADCSAnalyzer(BaseAnalyzer):
 
         items: List[Dict[str, Any]] = []
 
-        # ── ESC1: Client Auth + ENROLLEE_SUPPLIES_SUBJECT ────────────────────
+        # ESC1: Client Auth + ENROLLEE_SUPPLIES_SUBJECT
         for tpl in templates:
             ekus = tpl.extras.get("ekus", [])
             if (
@@ -105,7 +105,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                             ),
                         })
 
-        # ── ESC2: Any Purpose EKU or No EKU ──────────────────────────────────
+        # ESC2: Any Purpose EKU or No EKU
         for tpl in templates:
             ekus = tpl.extras.get("ekus", [])
             if tpl.extras.get("any_purpose") or _has_eku(ekus, ANY_PURPOSE_OID) or tpl.extras.get("no_eku"):
@@ -127,7 +127,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                     ),
                 })
 
-        # ── ESC3: Enrollment Agent Template ──────────────────────────────────
+        # ESC3: Enrollment Agent Template
         for tpl in templates:
             ekus = tpl.extras.get("ekus", [])
             if tpl.extras.get("enrollment_agent") or _has_eku(ekus, ENROLLMENT_AGENT_OID):
@@ -149,7 +149,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                     ),
                 })
 
-        # ── ESC4: Write permissions on certificate templates ─────────────────
+        # ESC4: Write permissions on certificate templates
         for tpl in templates:
             for ace in tpl.aces:
                 if not isinstance(ace, dict):
@@ -177,7 +177,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                             ),
                         })
 
-        # ── ESC6: CA with EDITF_ATTRIBUTESUBJECTALTNAME2 flag ────────────────
+        # ESC6: CA with EDITF_ATTRIBUTESUBJECTALTNAME2 flag
         for ca in cas:
             if ca.extras.get("has_editf_flag"):
                 items.append({
@@ -195,7 +195,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                     ),
                 })
 
-        # ── ESC7: Weak CA permissions (ManageCA / ManageCertificates) ────────
+        # ESC7: Weak CA permissions (ManageCA / ManageCertificates)
         for ca in cas:
             for ace in ca.aces:
                 if not isinstance(ace, dict):
@@ -221,7 +221,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                         ),
                     })
 
-        # ── ESC8: HTTP Enrollment (Web Enrollment / CES / CEP) ───────────────
+        # ESC8: HTTP Enrollment (Web Enrollment / CES / CEP)
         for ca in cas:
             if ca.extras.get("web_enrollment"):
                 items.append({
@@ -240,7 +240,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                     ),
                 })
 
-        # ── ESC5: Weak permissions on CA object or PKI containers ────────────
+        # ESC5: Weak permissions on CA object or PKI containers
         for ca in cas:
             for ace in ca.aces:
                 if not isinstance(ace, dict):
@@ -292,7 +292,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                                 "playbook": f"# Write custom object to PKI container using Ldap / Certipy"
                             })
 
-        # ── ESC9: No Strong Key Mapping Enforced ─────────────────────────────
+        # ESC9: No Strong Key Mapping Enforced
         for tpl in templates:
             ekus = tpl.extras.get("ekus", [])
             if (
@@ -327,7 +327,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                             )
                         })
 
-        # ── ESC10: Registry-level weak certificate-to-user mappings on DCs ──
+        # ESC10: Registry-level weak certificate-to-user mappings on DCs
         for computer in store.computers.values():
             if computer.properties.get("isdc") or computer.properties.get("is_dc"):
                 binding = computer.properties.get("strongcertificatebindingenforcement")
@@ -343,7 +343,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                         "playbook": f"# Exploit weak binding enforcement on DC via PKINIT and custom certificate mapping"
                     })
 
-        # ── ESC13: Templates with Policy OIDs mapping to privileged groups ──
+        # ESC13: Templates with Policy OIDs mapping to privileged groups
         for tpl in templates:
             policies = _as_list(tpl.properties.get("mspkicertificatepolicies")) or _as_list(tpl.properties.get("mspki-certificate-policies"))
             if policies:
@@ -365,7 +365,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                         )
                     })
 
-        # ── ESC11: RPC encryption disabled on CA ─────────────────────────────
+        # ESC11: RPC encryption disabled on CA
         for ca in cas:
             enc_req = ca.properties.get("enforceencryptionforrequests")
             if enc_req is None:
@@ -398,7 +398,7 @@ class ADCSAnalyzer(BaseAnalyzer):
                     )
                 })
 
-        # ── ESC12: YubiHSM key storage ───────────────────────────────────────
+        # ESC12: YubiHSM key storage
         for ca in cas:
             yubihsm = ca.properties.get("yubihsm")
             if yubihsm is None:

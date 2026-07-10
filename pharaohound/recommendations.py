@@ -80,7 +80,7 @@ def _has(findings: List[Dict[str, Any]], title: str) -> bool:
 def build_recommendations(store: ObjectStore, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     recs: List[Dict[str, Any]] = []
 
-    # ── Priority 1: Immediate wins ──────────────────────────────────────────
+    # Priority 1: Immediate wins
     if _has(findings, "DCSync Rights"):
         recs.append({
             "priority": 1,
@@ -143,7 +143,7 @@ def build_recommendations(store: ObjectStore, findings: List[Dict[str, Any]]) ->
             ),
         })
 
-    # ── Priority 2: ACL abuse ───────────────────────────────────────────────
+    # Priority 2: ACL abuse
     if _has(findings, "Dangerous ACL Permissions"):
         recs.append({
             "priority": 2,
@@ -206,7 +206,7 @@ def build_recommendations(store: ObjectStore, findings: List[Dict[str, Any]]) ->
             ),
         })
 
-    # ── Priority 3: GPO abuse ───────────────────────────────────────────────
+    # Priority 3: GPO abuse
     if _has(findings, "GPO Abuse Paths"):
         recs.append({
             "priority": 3,
@@ -228,7 +228,7 @@ def build_recommendations(store: ObjectStore, findings: List[Dict[str, Any]]) ->
             ),
         })
 
-    # ── Priority 4: Lateral movement ────────────────────────────────────────
+    # Priority 4: Lateral movement
     if _has(findings, "Active Sessions") or _has(findings, "Non-Privileged Local Admins"):
         recs.append({
             "priority": 4,
@@ -271,7 +271,7 @@ def build_recommendations(store: ObjectStore, findings: List[Dict[str, Any]]) ->
             ),
         })
 
-    # ── Priority 5: Trust abuse ─────────────────────────────────────────────
+    # Priority 5: Trust abuse
     if _has(findings, "Domain Trusts"):
         recs.append({
             "priority": 5,
@@ -292,7 +292,7 @@ def build_recommendations(store: ObjectStore, findings: List[Dict[str, Any]]) ->
             ),
         })
 
-    # ── Priority 6: Hygiene ─────────────────────────────────────────────────
+    # Priority 6: Hygiene
     if _has(findings, "Outdated Operating Systems"):
         recs.append({
             "priority": 6,
@@ -413,7 +413,7 @@ def build_recommendations(store: ObjectStore, findings: List[Dict[str, Any]]) ->
             ),
         })
 
-    # ── Inject OpSec metadata into every recommendation ───────────────────
+    # Inject OpSec metadata into every recommendation
     _FINDING_FOR_REC = {
         "IMMEDIATE — DCSync Attack":               "DCSync Rights",
         "IMMEDIATE — Kerberoasting":                "Kerberoastable Users",

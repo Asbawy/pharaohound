@@ -131,8 +131,10 @@ class PharaohoundShell:
         findings: Optional[List[Dict[str, Any]]] = None,
         attack_paths: Optional[List[Dict[str, Any]]] = None,
         recommendations: Optional[List[Dict[str, Any]]] = None,
+        show_banner: bool = True,
     ) -> None:
         self.store = store or ObjectStore()
+        self.show_banner = show_banner
         self.findings = findings or []
         self.attack_paths = attack_paths or []
         self.recommendations = recommendations or []
@@ -251,7 +253,7 @@ class PharaohoundShell:
         """Main shell loop."""
         # Show welcome
         if not self._data_loaded:
-            self._show_welcome()
+            self._show_welcome(show_banner=self.show_banner)
         else:
             print(
                 f"\n{colorize('[☥] Entering interactive shell. Type', Colors.GOLD)} "
@@ -384,9 +386,10 @@ class PharaohoundShell:
                 print()
 
     # WELCOME & HELP
-    def _show_welcome(self) -> None:
+    def _show_welcome(self, show_banner: bool = True) -> None:
         """Show the framework welcome screen."""
-        print(BANNER)
+        if show_banner:
+            print(BANNER)
         print(f"{colorize('═' * 65, Colors.GOLD)}")
         print(f"{colorize('  ☥  PHARAOHOUND FRAMEWORK — Interactive Mode', Colors.GOLD)}")
         print(f"{colorize('═' * 65, Colors.GOLD)}\n")
@@ -1606,17 +1609,18 @@ def run_shell(
     findings: List[Dict[str, Any]],
     attack_paths: List[Dict[str, Any]],
     recommendations: List[Dict[str, Any]],
+    show_banner: bool = True,
 ) -> None:
     """Entry point for the interactive shell (post-analysis mode)."""
     from .logging_setup import setup_logging
     setup_logging(verbose=False)
-    shell = PharaohoundShell(store, findings, attack_paths, recommendations)
+    shell = PharaohoundShell(store, findings, attack_paths, recommendations, show_banner=show_banner)
     shell.run()
 
 
-def run_framework() -> None:
+def run_framework(show_banner: bool = True) -> None:
     """Entry point for the framework mode (no prior data)."""
     from .logging_setup import setup_logging
     setup_logging(verbose=False)
-    shell = PharaohoundShell()
+    shell = PharaohoundShell(show_banner=show_banner)
     shell.run()

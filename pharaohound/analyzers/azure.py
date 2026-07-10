@@ -44,7 +44,7 @@ class AzureHybridAnalyzer(BaseAnalyzer):
     def analyze(self, store: ObjectStore) -> Optional[Finding]:
         items: List[Dict[str, Any]] = []
 
-        # ── 1. Azure AD Connect Sync Server Takeover ──
+        # 1. Azure AD Connect Sync Server Takeover
         # MSOL_ accounts are typically used by Azure AD Connect Sync.
         msol_users = [u for u in store.users.values() if u.name.upper().startswith("MSOL_")]
         # Computers likely running Azure AD Connect
@@ -111,7 +111,7 @@ class AzureHybridAnalyzer(BaseAnalyzer):
                             )
                         })
 
-        # ── 2. AppRoleAssignment & Owner Abuse ──
+        # 2. AppRoleAssignment & Owner Abuse
         # Walk through Azure entities
         for entity in store.azure.values():
             azure_type = entity.extras.get("azure_type", "ServicePrincipal")
@@ -173,7 +173,7 @@ class AzureHybridAnalyzer(BaseAnalyzer):
                         )
                     })
 
-        # ── 3. Azure VM Contributor Pivots ──
+        # 3. Azure VM Contributor Pivots
         for entity in store.azure.values():
             azure_type = entity.extras.get("azure_type", "")
             if azure_type.lower() in ("virtualmachine", "vm"):

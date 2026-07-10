@@ -53,7 +53,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
     """Generate structured attack paths from the findings list."""
     paths: List[Dict[str, Any]] = []
 
-    # ── Path 1: Kerberoast → Crack → DA ─────────────────────────────────────
+    # Path 1: Kerberoast → Crack → DA
     krb = _finding_by_title(findings, "Kerberoastable Users")
     if krb and krb["data"]:
         for target in [d for d in krb["data"] if d.get("in_high_value_group")][:3]:
@@ -77,7 +77,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["impacket-GetUserSPNs", "hashcat"],
             })
 
-    # ── Path 2: ACL Abuse → Takeover → DA ───────────────────────────────────
+    # Path 2: ACL Abuse → Takeover → DA
     acl = _finding_by_title(findings, "Dangerous ACL Permissions")
     if acl and acl["data"]:
         for edge in [d for d in acl["data"] if d["severity"] == Severity.CRITICAL][:3]:
@@ -112,7 +112,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["impacket-dacledit", "impacket-changepasswd", "certipy", "rbcd.py"],
             })
 
-    # ── Path 3: Unconstrained Delegation → Coerce → DA ──────────────────────
+    # Path 3: Unconstrained Delegation → Coerce → DA
     unc = _finding_by_title(findings, "Unconstrained Delegation")
     if unc and unc["data"]:
         for comp in unc["data"][:2]:
@@ -138,7 +138,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["PetitPotam", "printerbug", "mimikatz", "impacket-secretsdump", "impacket-ticketer"],
             })
 
-    # ── Path 4: GPO Abuse → Code Execution ─────────────────────────────────
+    # Path 4: GPO Abuse → Code Execution
     gpo = _finding_by_title(findings, "GPO Abuse Paths")
     if gpo and gpo["data"]:
         for edge in [d for d in gpo["data"] if d.get("kind") == "direct_write"][:2]:
@@ -161,7 +161,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["SharpGPOAbuse", "PowerView (New-GPOImmediateTask)"],
             })
 
-    # ── Path 5: AS-REP Roast → Crack → Access ───────────────────────────────
+    # Path 5: AS-REP Roast → Crack → Access
     asrep = _finding_by_title(findings, "AS-REP Roastable Users")
     if asrep and asrep["data"]:
         for target in asrep["data"][:2]:
@@ -185,7 +185,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["impacket-GetNPUsers", "hashcat"],
             })
 
-    # ── Path 6: Shadow Credentials ─────────────────────────────────────────
+    # Path 6: Shadow Credentials
     shadow = _finding_by_title(findings, "Shadow Credentials Opportunities")
     if shadow and shadow["data"]:
         for opp in shadow["data"][:3]:
@@ -209,7 +209,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["certipy", "whisker", "Rubeus"],
             })
 
-    # ── Path 7: DCSync Direct ──────────────────────────────────────────────
+    # Path 7: DCSync Direct
     dcsync = _finding_by_title(findings, "DCSync Rights")
     if dcsync and dcsync["data"]:
         for entry in dcsync["data"][:2]:
@@ -235,7 +235,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["impacket-secretsdump", "impacket-ticketer", "impacket-psexec"],
             })
 
-    # ── Path 8: LAPS → Local Admin → LSASS dump ────────────────────────────
+    # Path 8: LAPS → Local Admin → LSASS dump
     laps = _finding_by_title(findings, "LAPS Password Readers")
     if laps and laps["data"]:
         for entry in laps["data"][:2]:
@@ -260,7 +260,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["pyLAPS", "Get-AdmPwdPassword", "impacket-psexec", "mimikatz"],
             })
 
-    # ── Path 9: Self-Add to Group → Privilege Escalation ───────────────────
+    # Path 9: Self-Add to Group → Privilege Escalation
     self_add = _finding_by_title(findings, "Self-Add to Group Escalation")
     if self_add and self_add["data"]:
         for opp in self_add["data"][:3]:
@@ -296,7 +296,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["net rpc", "bloodyAD", "PowerView (Add-DomainGroupMember)", "impacket-dacledit"],
             })
 
-    # ── Path 10: MAQ → RBCD → DA ──────────────────────────────────────────
+    # Path 10: MAQ → RBCD → DA
     maq = _finding_by_title(findings, "Machine Account Quota Abuse")
     if maq and maq["data"]:
         for entry in maq["data"][:1]:
@@ -323,7 +323,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["impacket-addcomputer", "rbcd.py", "impacket-getST", "impacket-psexec"],
             })
 
-    # ── Path 11: gMSA Password Read → Service Takeover ────────────────────
+    # Path 11: gMSA Password Read → Service Takeover
     gmsa = _finding_by_title(findings, "gMSA Password Readers")
     if gmsa and gmsa["data"]:
         for entry in gmsa["data"][:2]:
@@ -347,7 +347,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["gMSADumper", "nxc (NetExec)", "impacket-psexec"],
             })
 
-    # ── Path 12: AD CS Certificate Abuse ──────────────────────────────────
+    # Path 12: AD CS Certificate Abuse
     adcs = _finding_by_title(findings, "AD CS Misconfigurations")
     if adcs and adcs["data"]:
         for item in adcs["data"][:3]:
@@ -369,7 +369,7 @@ def build_attack_paths(store: ObjectStore, findings: List[Dict[str, Any]]) -> Li
                 "tools": ["certipy", "Rubeus", "impacket-psexec"],
             })
 
-    # ── Inject OpSec metadata into every path ──────────────────────────────
+    # Inject OpSec metadata into every path
     for p in paths:
         penalty, label, events = _classify_path_noise(p["name"])
         p["opsec_score"] = penalty

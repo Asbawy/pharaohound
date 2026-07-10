@@ -22,7 +22,7 @@ def generate_html_report(
     attack_paths: List[Dict[str, Any]],
     recommendations: List[Dict[str, Any]],
 ) -> str:
-    # ── 1. EXTRACT GRAPH NODES AND EDGES ──
+    # 1. EXTRACT GRAPH NODES AND EDGES
     nodes_registry: Dict[str, Dict[str, Any]] = {}
     edges: List[Dict[str, Any]] = []
 
@@ -340,7 +340,7 @@ def generate_html_report(
 
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # ── 2. COMPILE HTML TEMPLATE ──
+    # 2. COMPILE HTML TEMPLATE
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>

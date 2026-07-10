@@ -104,7 +104,7 @@ class PlaybookInterpolator:
 
         return pattern.sub(replacer, text)
 
-    # ── Batch processors ────────────────────────────────────────────────────
+    # Batch processors
     def interpolate_findings(self, findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Interpolate all playbook commands inside findings."""
         for f in findings:

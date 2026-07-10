@@ -303,7 +303,7 @@ def run(argv=None) -> int:
         print(f"{Colors.GOLD}[📢] A newer version of Pharaohound is available: {Colors.TURQUOISE}{new_release}{Colors.GOLD} (Current: v{__version__}){Colors.RESET}")
         print(f"{Colors.GOLD}     Update via: {Colors.TURQUOISE}pip install --upgrade git+https://github.com/Asbawy/pharaohound.git{Colors.RESET}\n")
 
-    # ── Handle 'collect' subcommand ──────────────────────────────────────
+    # Handle 'collect' subcommand
     if hasattr(args, 'subcommand') and args.subcommand == "collect":
         return run_collect(args)
 
@@ -325,10 +325,10 @@ def run(argv=None) -> int:
                 print(f"      {Colors.DIM}{mod['description'][:80]}...{Colors.RESET}")
         return 0
 
-    # ── No directory given = launch framework shell ─────────────────────
+    # No directory given = launch framework shell
     if not args.directory:
         from .shell import run_framework
-        run_framework()
+        run_framework(show_banner=False)
         return 0
 
     directory = os.path.abspath(args.directory)
@@ -336,7 +336,7 @@ def run(argv=None) -> int:
         print(f"{Colors.CARNELIAN}[✗] Not a directory or ZIP file: {directory}{Colors.RESET}")
         return 2
 
-    # ── 1. PARSE ────────────────────────────────────────────────────────────
+    # 1. PARSE
     print(f"{Colors.TURQUOISE}[⚱] Scanning BloodHound data in: {directory}{Colors.RESET}\n")
     store: ObjectStore = load_directory(
         directory,
@@ -348,7 +348,7 @@ def run(argv=None) -> int:
         print(f"\n{Colors.CARNELIAN}[✗] No BloodHound objects loaded. Exiting.{Colors.RESET}")
         return 1
 
-    # ── 2. USER SELECTION ───────────────────────────────────────────────────
+    # 2. USER SELECTION
     compromised_sids = select_compromised_users(store, args)
     reachability_ctx: Optional[ReachabilityContext] = None
 
@@ -359,7 +359,7 @@ def run(argv=None) -> int:
         print(f"{Colors.GOLD}[☥] Reachability context built for: {Colors.TURQUOISE}{user_names}{Colors.RESET}")
         print(f"  {Colors.DIM}  Effective identities (user + group memberships): {closure_size}{Colors.RESET}\n")
 
-    # ── 3. ANALYZE ──────────────────────────────────────────────────────────
+    # 3. ANALYZE
     print(f"{Colors.GOLD}[☥] Running {len(REGISTRY.all_analyzers())} analyzers…{Colors.RESET}\n")
     findings: list[Finding] = []
     for cls in REGISTRY.all_analyzers():
@@ -385,11 +385,11 @@ def run(argv=None) -> int:
 
     findings_dicts = [f.to_dict() for f in findings]
 
-    # ── 4. BUILD ATTACK PATHS + RECOMMENDATIONS ─────────────────────────────
+    # 4. BUILD ATTACK PATHS + RECOMMENDATIONS
     attack_paths = build_attack_paths(store, findings_dicts)
     recommendations = build_recommendations(store, findings_dicts)
 
-    # ── 5. APPLY REACHABILITY FILTER ────────────────────────────────────────
+    # 5. APPLY REACHABILITY FILTER
     if reachability_ctx:
         total_findings = len(findings_dicts)
         total_paths = len(attack_paths)
@@ -402,7 +402,7 @@ def run(argv=None) -> int:
         print(f"  {Colors.DIM}  Findings: {len(findings_dicts)}/{total_findings} reachable{Colors.RESET}")
         print(f"  {Colors.DIM}  Attack paths: {len(attack_paths)}/{total_paths} reachable{Colors.RESET}\n")
 
-    # ── 5.5 VARIABLE INTERPOLATION ──────────────────────────────────────────
+    # 5.5 VARIABLE INTERPOLATION
     if args.variables:
         from .tactical import PlaybookInterpolator
         interpolator = PlaybookInterpolator(args.variables)
@@ -423,7 +423,7 @@ def run(argv=None) -> int:
         findings_dicts = evasion_engine.inject_evasion(findings_dicts)
         recommendations = evasion_engine.inject_evasion_recs(recommendations)
 
-    # ── 5.6 NOOB MODE SIMPLIFICATION ───────────────────────────────────────
+    # 5.6 NOOB MODE SIMPLIFICATION
     if args.noob:
         from .noob import simplify_findings, simplify_paths, simplify_recommendations
         pre_f, pre_p, pre_r = len(findings_dicts), len(attack_paths), len(recommendations)
@@ -435,7 +435,7 @@ def run(argv=None) -> int:
         print(f"  {Colors.DIM}  Attack paths: {len(attack_paths)}/{pre_p} (best per type){Colors.RESET}")
         print(f"  {Colors.DIM}  Recommendations: {len(recommendations)}/{pre_r} (priority 1-3 only){Colors.RESET}\n")
 
-    # ── 6. CONSOLE REPORT ─────────────────────────────────────────────────────────────
+    # 6. CONSOLE REPORT
     stats = store.stats()
     domain = store.primary_domain_name()
 
@@ -446,7 +446,7 @@ def run(argv=None) -> int:
     reporter.print_recommendations(recommendations)
     reporter.print_summary(findings_dicts, attack_paths, recommendations)
 
-    # ── 7. FILE REPORTS ─────────────────────────────────────────────────────
+    # 7. FILE REPORTS
     if args.format in {"text", "both"}:
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         out_dir = os.path.abspath(args.output)
@@ -463,10 +463,10 @@ def run(argv=None) -> int:
         generate_html_report(out_path, stats, domain, findings_dicts, attack_paths, recommendations)
         print(f"{Colors.MALACHITE}[✓] HTML Graph report: {out_path}{Colors.RESET}")
 
-    # ── 8. INTERACTIVE SHELL ─────────────────────────────────────────────────
+    # 8. INTERACTIVE SHELL
     if args.shell:
         from .shell import run_shell
-        run_shell(store, findings_dicts, attack_paths, recommendations)
+        run_shell(store, findings_dicts, attack_paths, recommendations, show_banner=False)
 
     return 0
 

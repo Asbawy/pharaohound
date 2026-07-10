@@ -84,7 +84,7 @@ class ConsoleReporter:
         if self.use_rich:
             self.console = Console(highlight=False, soft_wrap=False)
 
-    # ── Output helpers ──────────────────────────────────────────────────────
+    # Output helpers
     def _print(self, text: str = "") -> None:
         if self.use_rich:
             self.console.print(text, overflow="fold")
@@ -94,7 +94,7 @@ class ConsoleReporter:
     def banner(self) -> None:
         self._print(BANNER)
 
-    # ── Stats table ─────────────────────────────────────────────────────────
+    # Stats table
     def print_stats(self, stats: Dict[str, int]) -> None:
         self._print(colorize("  ☥  D O M A I N   S T A T I S T I C S", Colors.GOLD, bold=True))
 
@@ -125,7 +125,7 @@ class ConsoleReporter:
         else:
             print(_ascii_table(["Type", "Count"], rows))
 
-    # ── Risk summary ────────────────────────────────────────────────────────
+    # Risk summary
     def print_risk(self, findings: List[Dict[str, Any]]) -> None:
         sev_counts: Dict[str, int] = {s: 0 for s in Severity.__dict__.values() if isinstance(s, str)}
         for f in findings:
@@ -169,7 +169,7 @@ class ConsoleReporter:
         else:
             print(_ascii_table(["", "Severity", "Count"], rows))
 
-    # ── Findings ────────────────────────────────────────────────────────────
+    # Findings
     def print_findings(self, findings: List[Dict[str, Any]]) -> None:
         self._print(colorize("  ☥  F I N D I N G S", Colors.GOLD, bold=True))
 
@@ -312,7 +312,7 @@ class ConsoleReporter:
             parts.append(colorize("(HIGH-VALUE)", Colors.CARNELIAN))
         return " ".join(str(p) for p in parts) if parts else str(item)
 
-    # ── Attack paths ────────────────────────────────────────────────────────
+    # Attack paths
     def print_attack_paths(self, paths: List[Dict[str, Any]]) -> None:
         self._print(colorize("  ⚔  A T T A C K   P A T H S", Colors.GOLD, bold=True))
 
@@ -340,7 +340,7 @@ class ConsoleReporter:
                     self._print(f"    {line}")
             self._print("")
 
-    # ── Recommendations ─────────────────────────────────────────────────────
+    # Recommendations
     def print_recommendations(self, recs: List[Dict[str, Any]]) -> None:
         self._print(colorize("  ☥  P R I O R I T I Z E D   R E C O M M E N D A T I O N S", Colors.GOLD, bold=True))
 
@@ -364,7 +364,7 @@ class ConsoleReporter:
                 self._print(f"  {colorize('Defender:', Colors.MALACHITE)} {r['defender_action']}")
             self._print("")
 
-    # ── Final summary ───────────────────────────────────────────────────────
+    # Final summary
     def print_summary(self, findings: List[Dict[str, Any]], attack_paths: List[Dict[str, Any]], recs: List[Dict[str, Any]]) -> None:
         self._print(colorize("  ☥  A N A L Y S I S   C O M P L E T E  ☥", Colors.GOLD, bold=True))
 

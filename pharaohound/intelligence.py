@@ -28,7 +28,7 @@ from .theme import Severity
 
 # EDGE INTELLIGENCE CATALOG
 EDGE_INTELLIGENCE: Dict[str, Dict] = {
-    # ── ACL rights ──────────────────────────────────────────────────────────
+    # ACL rights
     "GenericAll": {
         "severity": Severity.CRITICAL,
         "short": "Full control of the target object",
@@ -364,7 +364,7 @@ EDGE_INTELLIGENCE: Dict[str, Dict] = {
         ),
     },
 
-    # ── Edges that grant code execution ──────────────────────────────────────
+    # Edges that grant code execution
     "AdminTo": {
         "severity": Severity.HIGH,
         "short": "Local administrator on the target computer",
@@ -448,7 +448,7 @@ EDGE_INTELLIGENCE: Dict[str, Dict] = {
         "remediation": "Restrict Distributed COM Users. Disable DCOM where unused (dcomcnfg).",
     },
 
-    # ── Group / GPO edges ────────────────────────────────────────────────────
+    # Group / GPO edges
     "MemberOf": {
         "severity": Severity.MEDIUM,
         "short": "Direct group membership",
@@ -484,7 +484,7 @@ EDGE_INTELLIGENCE: Dict[str, Dict] = {
         ),
     },
 
-    # ── Other dangerous edges ────────────────────────────────────────────────
+    # Other dangerous edges
     "UnconstrainedDelegation": {
         "severity": Severity.CRITICAL,
         "short": "Unconstrained Delegation — TGT capture primitive",
@@ -661,7 +661,7 @@ EDGE_INTELLIGENCE: Dict[str, Dict] = {
         ),
     },
 
-    # ── AD CS (Active Directory Certificate Services) edges ───────────────
+    # AD CS (Active Directory Certificate Services) edges
     "ADCS_ESC1": {
         "severity": Severity.CRITICAL,
         "short": "Certificate template allows SAN specification with Client Auth EKU",

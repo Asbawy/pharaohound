@@ -246,7 +246,10 @@ class LDAPClient:
                 connect_timeout=self.timeout,
             )
 
-            ntlm_user = f"{domain}\\{username}"
+            # NTLM requires the NetBIOS domain name, not the FQDN.
+            # Strip everything after the first dot (HERCULES.HTB → HERCULES).
+            netbios_domain = domain.split(".")[0].upper()
+            ntlm_user = f"{netbios_domain}\\{username}"
             self._conn = Connection(
                 self._server,
                 user=ntlm_user,

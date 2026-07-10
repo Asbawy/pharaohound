@@ -14,7 +14,7 @@ from typing import Any, Dict, List
 
 from ..theme import Severity, SEVERITY_RANK
 
-# ── Beginner-Friendly Glossary Database ──
+# Beginner-Friendly Glossary Database
 GLOSSARY = {
     "Kerberoastable Users": {
         "concept": "Kerberoastable Users (SPN Accounts)",
@@ -194,7 +194,7 @@ def generate_text_report(
     lines: List[str] = []
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # ── Cover ──
+    # Cover
     lines.append("=" * 100)
     lines.append(" " * 40 + "PHARAOHOUND REPORT")
     lines.append("=" * 100)
@@ -203,7 +203,7 @@ def generate_text_report(
     lines.append(f"Tool Version:     1.0.0")
     lines.append("")
 
-    # ── Stats ──
+    # Stats
     lines.append("-" * 100)
     lines.append("  DOMAIN STATISTICS")
     lines.append("-" * 100)
@@ -211,7 +211,7 @@ def generate_text_report(
         lines.append(f"  {k.capitalize():<15}: {v}")
     lines.append("")
 
-    # ── Risk ──
+    # Risk
     crit = sum(1 for f in findings if f["severity"] == Severity.CRITICAL)
     high = sum(1 for f in findings if f["severity"] == Severity.HIGH)
     med = sum(1 for f in findings if f["severity"] == Severity.MEDIUM)
@@ -232,7 +232,7 @@ def generate_text_report(
     lines.append(f"  Total Critical Risks: {crit}  |  High Risks: {high}  |  Medium Risks: {med}  |  Low Risks: {low}")
     lines.append("")
 
-    # ── Findings ──
+    # Findings
     lines.append("=" * 100)
     lines.append("  FINDINGS & VULNERABILITIES")
     lines.append("=" * 100)
@@ -271,7 +271,7 @@ def generate_text_report(
         lines.append("-" * 80)
         lines.append("")
 
-    # ── Attack Paths ──
+    # Attack Paths
     lines.append("=" * 100)
     lines.append("  VULNERABILITY ATTACK CHAINS")
     lines.append("=" * 100)
@@ -294,7 +294,7 @@ def generate_text_report(
                 lines.append(f"        {line}")
         lines.append("")
 
-    # ── Recommendations ──
+    # Recommendations
     lines.append("=" * 100)
     lines.append("  PRIORITIZED REMEDIATION ACTIONS")
     lines.append("=" * 100)
