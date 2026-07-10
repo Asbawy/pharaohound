@@ -138,6 +138,7 @@ class PharaohoundShell:
         self.findings = findings or []
         self.attack_paths = attack_paths or []
         self.recommendations = recommendations or []
+        self._last_displayed_paths = list(self.attack_paths)
 
         # Framework variables
         self.variables: Dict[str, str] = {}
@@ -350,7 +351,7 @@ class PharaohoundShell:
                 elif cmd == "info":
                     self._cmd_info(arg)
                 elif cmd == "paths":
-                    self._cmd_paths()
+                    self._cmd_paths(arg)
                 elif cmd == "path":
                     self._cmd_path_detail(arg)
                 elif cmd == "recs":
@@ -813,6 +814,7 @@ class PharaohoundShell:
                 self.recommendations = interpolator.interpolate_recommendations(self.recommendations)
 
         self._analyzed = True
+        self._last_displayed_paths = list(self.attack_paths)
 
         print(
             f"\n  {colorize('[✓]', Colors.MALACHITE)} Analysis complete: "
@@ -1035,16 +1037,33 @@ class PharaohoundShell:
         print(f"  {colorize('═' * 60, Colors.GOLD)}\n")
 
     # PATHS
-    def _cmd_paths(self) -> None:
+    def _cmd_paths(self, arg: str = "") -> None:
         if not self._analyzed:
             print(f"  {colorize('[!]', Colors.OCHRE)} Run 'analyze' first.")
             return
         if not self.attack_paths:
             print(f"  {colorize('[✓]', Colors.MALACHITE)} No attack paths detected.")
             return
-        paths_title = f"Attack Paths ({len(self.attack_paths)}):"
+
+        query = arg.strip().lower()
+        if not query or query == "all":
+            self._last_displayed_paths = list(self.attack_paths)
+            paths_title = f"Attack Paths ({len(self.attack_paths)}):"
+        else:
+            self._last_displayed_paths = [
+                p for p in self.attack_paths
+                if query in p["name"].lower()
+                or query in p["summary"].lower()
+                or any(query in step.lower() for step in p.get("steps", []))
+            ]
+            paths_title = f"Attack Paths matching '{arg}' ({len(self._last_displayed_paths)}):"
+
+        if not self._last_displayed_paths:
+            print(f"  {colorize('[!]', Colors.OCHRE)} No attack paths matched search query '{arg}'.")
+            return
+
         print(f"\n  {colorize(paths_title, Colors.GOLD)}")
-        for i, p in enumerate(self.attack_paths, 1):
+        for i, p in enumerate(self._last_displayed_paths, 1):
             opsec = p.get("opsec_label", "")
             sev = p.get("severity", "")
             sev_colors = {"CRITICAL": Colors.CARNELIAN, "HIGH": Colors.OCHRE, "MEDIUM": Colors.GOLD}
@@ -1061,10 +1080,12 @@ class PharaohoundShell:
         except (ValueError, TypeError):
             print(f"  {colorize('[!]', Colors.OCHRE)} Usage: path <number>  (e.g., 'path 1')")
             return
-        if idx < 0 or idx >= len(self.attack_paths):
-            print(f"  {colorize('[!]', Colors.OCHRE)} Invalid path index. Range: 1-{len(self.attack_paths)}")
+
+        paths_list = getattr(self, "_last_displayed_paths", self.attack_paths) or self.attack_paths
+        if idx < 0 or idx >= len(paths_list):
+            print(f"  {colorize('[!]', Colors.OCHRE)} Invalid path index. Range: 1-{len(paths_list)}")
             return
-        p = self.attack_paths[idx]
+        p = paths_list[idx]
         print(f"\n  {colorize('═' * 60, Colors.GOLD)}")
         print(f"  {colorize(f'Path {idx + 1}:', Colors.GOLD)} {colorize(p['name'], Colors.TURQUOISE)}")
         print(f"  {colorize('Severity:', Colors.DIM)} {p['severity']}  {p.get('opsec_label', '')}")
@@ -1586,6 +1607,7 @@ class PharaohoundShell:
             self.attack_paths = data.get("attack_paths", [])
             self.recommendations = data.get("recommendations", [])
             self._analyzed = data.get("analyzed", False)
+            self._last_displayed_paths = list(self.attack_paths)
 
             # Display a beautiful summary panel
             print(f"\n{colorize('═' * 60, Colors.GOLD)}")
