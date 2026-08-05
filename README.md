@@ -2,7 +2,7 @@
 > **The Active Directory Collection, Analysis & Exploitation Framework**
 
 [![Python Version](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org)
-[![Version](https://img.shields.io/badge/version-2.0.2-gold.svg)](https://github.com/Asbawy/pharaohound)
+[![Version](https://img.shields.io/badge/version-2.0.3-gold.svg)](https://github.com/Asbawy/pharaohound)
 [![Category: Active Directory](https://img.shields.io/badge/Focus-Active%20Directory%20%26%20Azure-teal.svg)](https://github.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 

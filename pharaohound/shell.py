@@ -509,6 +509,11 @@ class PharaohoundShell:
                     use_zip = False; i += 1
                 elif tokens[i] == "--secure":
                     secure = True; i += 1
+                elif tokens[i] == "--no-color":
+                    from .cli import disable_colors
+                    disable_colors(); i += 1
+                elif tokens[i] in ("--verbose", "--no-rich"):
+                    i += 1
                 else:
                     i += 1
 

@@ -49,6 +49,9 @@ def _build_collect_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-zip", action="store_true", help="Save individual JSON files instead of ZIP")
     p.add_argument("--secure", action="store_true", help="Use LDAPS (SSL/TLS)")
     p.add_argument("--analyze", action="store_true", help="Automatically analyze after collection")
+    p.add_argument("--verbose", action="store_true", help="Verbose output")
+    p.add_argument("--no-color", action="store_true", help="Disable ANSI colors")
+    p.add_argument("--no-rich", action="store_true", help="Disable rich tables, use plain ASCII fallback")
     return p
 
 
@@ -273,6 +276,12 @@ def run_collect(args: argparse.Namespace) -> int:
         print(f"\n{Colors.GOLD}[☥] Auto-analyzing collected data…{Colors.RESET}\n")
         # Re-run the analysis pipeline on the collected output
         analysis_argv = [args.coll_output, "--all", "-o", args.coll_output]
+        if getattr(args, "verbose", False):
+            analysis_argv.append("--verbose")
+        if getattr(args, "no_color", False):
+            analysis_argv.append("--no-color")
+        if getattr(args, "no_rich", False):
+            analysis_argv.append("--no-rich")
         return run(analysis_argv)
 
     return 0
@@ -288,13 +297,13 @@ def run(argv=None) -> int:
 
     args = parse_args(argv)
 
-    if args.no_color:
+    if getattr(args, "no_color", False):
         disable_colors()
 
     from .logging_setup import setup_logging
-    setup_logging(verbose=args.verbose)
+    setup_logging(verbose=getattr(args, "verbose", False))
 
-    reporter = ConsoleReporter(use_rich=not args.no_rich)
+    reporter = ConsoleReporter(use_rich=not getattr(args, "no_rich", False))
     reporter.banner()
 
     # Check for updates from GitHub (non-blocking, 1.0s timeout)
