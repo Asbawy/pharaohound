@@ -266,7 +266,9 @@ class UserEnumerator(BaseEnumerator):
             "pwdlastset": pwd_last_set,
             "lastlogon": last_logon,
             "pwdneverexpires": uac_flags["dont_expire_password"],
-            "highvalue": False,
+            # adminCount=1 means the account is (or was) a member of a
+            # privileged group — mark it high-value like BloodHound does.
+            "highvalue": _get_attr_bool(entry, "adminCount"),
         }
 
         return {

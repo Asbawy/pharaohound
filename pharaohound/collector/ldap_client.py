@@ -521,6 +521,10 @@ class LDAPClient:
 
         Uses the Simple Paged Results control (RFC 2696) to handle
         large result sets without hitting server-side size limits.
+        Resilient to legacy schema: if the DC rejects a requested
+        attribute (e.g. msDS-AllowedToActOnBehalfOfOtherIdentity on
+        pre-2012 servers, or LAPS attributes where LAPS is absent),
+        the search is retried without the offending attribute.
         """
         if not self._conn:
             return []
@@ -532,27 +536,58 @@ class LDAPClient:
         }
         scope = scope_map.get(search_scope.upper(), "SUBTREE")
 
-        all_entries = []
-        try:
-            # Use ldap3's built-in paged search
-            entry_generator = self._conn.extend.standard.paged_search(
-                search_base=search_base,
-                search_filter=search_filter,
-                search_scope=scope,
-                attributes=attributes,
-                paged_size=self.page_size,
-                generator=True,
-                controls=controls,
-            )
+        # Attributes that only exist on newer (>= 2012) or LAPS-enabled schema.
+        # Dropped one-by-one when a legacy DC rejects the query.
+        OPTIONAL_ATTRS = [
+            "msDS-AllowedToActOnBehalfOfOtherIdentity",
+            "ms-Mcs-AdmPwd",
+            "ms-Mcs-AdmPwdExpirationTime",
+            "msLAPS-Password",
+            "msLAPS-PasswordExpirationTime",
+            "msDS-GroupMSAMembership",
+        ]
 
-            for entry in entry_generator:
-                if entry.get("type") == "searchResEntry":
-                    all_entries.append(entry)
+        attempt_attrs = list(attributes) if attributes else []
+        while attempt_attrs:
+            all_entries = []
+            try:
+                entry_generator = self._conn.extend.standard.paged_search(
+                    search_base=search_base,
+                    search_filter=search_filter,
+                    search_scope=scope,
+                    attributes=attempt_attrs,
+                    paged_size=self.page_size,
+                    generator=True,
+                    controls=controls,
+                )
+                for entry in entry_generator:
+                    if entry.get("type") == "searchResEntry":
+                        all_entries.append(entry)
+                return all_entries
+            except Exception as e:
+                msg = str(e)
+                # Legacy schema: drop optional attributes older DCs reject
+                if "attribute" in msg.lower():
+                    for opt in OPTIONAL_ATTRS:
+                        if opt in attempt_attrs:
+                            attempt_attrs.remove(opt)
+                            print(
+                                f"  {Colors.OCHRE}[!] {opt} unsupported by DC schema "
+                                f"— retrying without it{Colors.RESET}"
+                            )
+                            break
+                    else:
+                        print(
+                            f"  {Colors.OCHRE}[!] Retrying search without attribute "
+                            f"'{attempt_attrs[-1]}'{Colors.RESET}"
+                        )
+                        attempt_attrs.pop()
+                    continue
+                print(f"  {Colors.OCHRE}[!] Paged search error: {e}{Colors.RESET}")
+                return []
 
-        except Exception as e:
-            print(f"  {Colors.OCHRE}[!] Paged search error: {e}{Colors.RESET}")
-
-        return all_entries
+        print(f"  {Colors.OCHRE}[!] Paged search error: all requested attributes rejected{Colors.RESET}")
+        return []
 
     def search(
         self,

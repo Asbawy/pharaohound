@@ -131,7 +131,7 @@ class PharaohoundShell:
         findings: Optional[List[Dict[str, Any]]] = None,
         attack_paths: Optional[List[Dict[str, Any]]] = None,
         recommendations: Optional[List[Dict[str, Any]]] = None,
-        show_banner: bool = False,
+        show_banner: bool = True,
     ) -> None:
         self.store = store or ObjectStore()
         self.show_banner = show_banner
@@ -1636,7 +1636,7 @@ def run_shell(
     findings: List[Dict[str, Any]],
     attack_paths: List[Dict[str, Any]],
     recommendations: List[Dict[str, Any]],
-    show_banner: bool = False,
+    show_banner: bool = True,
 ) -> None:
     """Entry point for the interactive shell (post-analysis mode)."""
     from .logging_setup import setup_logging
@@ -1645,7 +1645,7 @@ def run_shell(
     shell.run()
 
 
-def run_framework(show_banner: bool = False) -> None:
+def run_framework(show_banner: bool = True) -> None:
     """Entry point for the framework mode (no prior data)."""
     from .logging_setup import setup_logging
     setup_logging(verbose=False)

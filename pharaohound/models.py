@@ -227,13 +227,33 @@ class ObjectStore:
 
         Uses an iterative BFS that handles nested groups and cycles.
         Group memberships are derived from each group's `Members` array
-        (SharpHound emits {ObjectIdentifier, ObjectType} per member).
+        (SharpHound emits {ObjectIdentifier, ObjectType} per member;
+        Pharaohound's own collector emits member DNs, resolved via a
+        DN/name -> SID map built from the loaded objects).
         """
+        # DN/name -> SID lookup so memberships stored as DNs still link up
+        dn_map: Dict[str, str] = {}
+        for obj in self._by_sid.values():
+            raw_props = obj.raw.get("Properties") if isinstance(obj.raw, dict) else {}
+            dn = _as_str(raw_props.get("distinguishedname")) if isinstance(raw_props, dict) else ""
+            if dn:
+                dn_map.setdefault(dn.lower(), obj.sid)
+            dn_map.setdefault(obj.name.lower(), obj.sid)
+
+        def _resolve(member: Any) -> str:
+            sid = _extract_sid(member)
+            if not sid:
+                return ""
+            if sid.startswith("S-"):
+                return sid
+            # Not a SID — try DN/name resolution
+            return dn_map.get(sid.lower(), "")
+
         result: Dict[str, set] = {sid: set() for sid in self._by_sid.keys()}
         # Seed with direct memberships
         for g_sid, group in self.groups.items():
             for member in _as_list(group.raw.get("Members")):
-                m_sid = _extract_sid(member)
+                m_sid = _resolve(member)
                 if m_sid:
                     result.setdefault(m_sid, set()).add(g_sid)
         # Also honor PrimaryGroupSID pointer on user/computer objects
@@ -278,7 +298,9 @@ def build_user(raw: Dict[str, Any]) -> ADObject:
         raw=raw,
         enabled=_as_bool(props.get("enabled"), True),
         admincount=_as_bool(props.get("admincount")),
-        highvalue=False,
+        # Honor the collected highvalue property (derived from adminCount
+        # by Pharaohound's collector; SharpHound emits it directly).
+        highvalue=_as_bool(props.get("highvalue")),
     )
     obj.extras = {
         "spns": spns,
