@@ -1,5 +1,5 @@
 """
-Pharaohound v2.0.3
+Pharaohound v2.0.4
 ==================
 
 A streaming, concurrent, modular BloodHound JSON analysis engine
@@ -15,6 +15,6 @@ Usage:
 
 from .theme import Colors, Severity, SEVERITY_RANK
 
-__version__ = "2.0.3"
+__version__ = "2.0.4"
 __author__ = "Asbawy"
 __license__ = "MIT"
